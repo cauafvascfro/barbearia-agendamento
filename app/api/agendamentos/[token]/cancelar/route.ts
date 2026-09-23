@@ -1,0 +1,4 @@
+import { NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+type Props={params:Promise<{token:string}>}
+export async function POST(_request:Request,{params}:Props){const {token}=await params;const supabase=createAdminClient();const {error}=await supabase.rpc('cancelar_agendamento_cliente',{p_token:token});if(error){const m=error.message;if(m.includes('CANCELAMENTO_FORA_DO_PRAZO'))return NextResponse.json({erro:'O prazo para cancelar terminou.'},{status:422});if(m.includes('AGENDAMENTO_NAO_PODE_SER_CANCELADO')||m.includes('AGENDAMENTO_JA_INICIADO'))return NextResponse.json({erro:'Este agendamento não pode mais ser cancelado.'},{status:422});return NextResponse.json({erro:'Não foi possível cancelar.'},{status:500})}return NextResponse.json({sucesso:true})}
