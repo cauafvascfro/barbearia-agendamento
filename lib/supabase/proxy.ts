@@ -28,25 +28,31 @@ export async function updateSession(request: NextRequest) {
   const isLoginRoute = request.nextUrl.pathname === '/login'
 
   if (isAdminRoute && !data?.claims) {
-    const response = NextResponse.redirect(new URL('/login', request.url))
-    response.cookies.setAll(supabaseResponse.cookies.getAll())
-    copyCacheHeaders(supabaseResponse, response)
-    return response
+    return redirectWithSession(request, supabaseResponse, '/login')
   }
 
   if (isLoginRoute && data?.claims) {
-    const response = NextResponse.redirect(new URL('/admin', request.url))
-    response.cookies.setAll(supabaseResponse.cookies.getAll())
-    copyCacheHeaders(supabaseResponse, response)
-    return response
+    return redirectWithSession(request, supabaseResponse, '/admin')
   }
 
   return supabaseResponse
 }
 
-function copyCacheHeaders(from: NextResponse, to: NextResponse) {
+function redirectWithSession(
+  request: NextRequest,
+  sessionResponse: NextResponse,
+  pathname: string,
+) {
+  const response = NextResponse.redirect(new URL(pathname, request.url))
+
+  sessionResponse.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie.name, cookie.value, cookie)
+  })
+
   for (const header of ['cache-control', 'expires', 'pragma']) {
-    const value = from.headers.get(header)
-    if (value) to.headers.set(header, value)
+    const value = sessionResponse.headers.get(header)
+    if (value) response.headers.set(header, value)
   }
+
+  return response
 }
