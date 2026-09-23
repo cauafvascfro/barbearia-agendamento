@@ -1,11 +1,6 @@
 name: Deploy database migrations
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'supabase/migrations/**'
-      - 'supabase/config.toml'
   workflow_dispatch:
 
 permissions:
@@ -18,6 +13,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -27,6 +23,11 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - name: Validate secrets
+        run: |
+          test -n "$SUPABASE_ACCESS_TOKEN"
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$SUPABASE_PROJECT_ID"
       - name: Link production project
         run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
       - name: Preview migrations
