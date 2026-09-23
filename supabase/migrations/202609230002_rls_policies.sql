@@ -37,3 +37,7 @@ using (true) with check (true);
 create policy "Admin consulta eventos"
 on public.agendamento_eventos for select to authenticated
 using (true);
+
+create policy "Admin registra eventos"
+on public.agendamento_eventos for insert to authenticated
+with check (true);
