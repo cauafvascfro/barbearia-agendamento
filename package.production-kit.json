@@ -1,0 +1,20 @@
+{
+  "scripts_to_merge": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies_to_add": {
+    "@supabase/ssr": "latest",
+    "@supabase/supabase-js": "latest",
+    "luxon": "latest",
+    "zod": "latest"
+  },
+  "devDependencies_to_add": {
+    "@playwright/test": "latest",
+    "@types/luxon": "latest",
+    "vitest": "latest"
+  },
+  "next_recommended": "16.3.6"
+}
