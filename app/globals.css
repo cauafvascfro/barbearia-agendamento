@@ -109,6 +109,10 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .client-search-results p { padding: 12px; margin: 0; }
 .selected-client { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: #fafafa; }
 .selected-client div { display: grid; gap: 2px; }
+.customer-search { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.customer-search .input { width: min(300px, 100%); }
+.table-row[href] { transition: background .15s ease; }
+.table-row[href]:hover { background: #fafafa; }
 .login-card { width: min(440px, 100%); background: #18181b; color: #fff; border: 1px solid #3f3f46; border-radius: 20px; padding: 30px; }
 .login-card .input { background: #09090b; color: #fff; border-color: #3f3f46; }
 .login-card .muted { color: #a1a1aa; }
@@ -126,5 +130,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .times { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .manual-times { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .split { align-items: flex-start; flex-direction: column; }
+  .customer-search, .customer-search .input { width: 100%; }
+  .customer-search .btn { flex: 1; }
   .appointment { grid-template-columns: 1fr; }
 }
