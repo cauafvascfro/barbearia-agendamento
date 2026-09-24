@@ -34,15 +34,45 @@ jobs:
       - run: npm test
       - run: npm run build
 
-  database-migrations:
-    if: github.event_name != 'push'
+  integration:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
       - name: Start local Supabase
         run: supabase start
-      - name: Rebuild database from migrations
+
+      - name: Apply migrations and development seed
         run: supabase db reset
+
+      - name: Export local Supabase credentials
+        shell: bash
+        run: |
+          supabase status -o env > /tmp/supabase.env
+          source /tmp/supabase.env
+          echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${PUBLISHABLE_KEY:-$ANON_KEY}" >> "$GITHUB_ENV"
+          echo "SUPABASE_SECRET_KEY=${SECRET_KEY:-$SERVICE_ROLE_KEY}" >> "$GITHUB_ENV"
+          echo "RATE_LIMIT_SALT=ci-integration-rate-limit-salt" >> "$GITHUB_ENV"
+          echo "CRON_SECRET=ci-integration-cron-secret" >> "$GITHUB_ENV"
+          echo "APP_URL=http://127.0.0.1:3000" >> "$GITHUB_ENV"
+
+      - name: Build application against local Supabase
+        run: npm run build
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run end-to-end tests
+        run: npm run test:e2e
