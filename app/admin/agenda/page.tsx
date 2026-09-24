@@ -5,7 +5,7 @@ import { formatarMoeda, formatarTelefone } from '@/lib/formatters'
 import { alterarStatusAgendamento, criarAgendamentoManual, criarBloqueio, removerBloqueio, criarAberturaExtra, removerAberturaExtra } from './actions'
 
 export const dynamic = 'force-dynamic'
-type Props = { searchParams: Promise<{ data?: string; erro?: string; sucesso?: string }> }
+type Props = { searchParams: Promise<{ data?: string; erro?: string; sucesso?: string; status?: string }> }
 
 export default async function AgendaPage({ searchParams }: Props) {
   const params = await searchParams
@@ -34,6 +34,9 @@ export default async function AgendaPage({ searchParams }: Props) {
   const faturamentoDia = concluidos.reduce((total, a) => total + Number(a.preco), 0)
   const agora = DateTime.now().setZone(timezone)
   const proximo = confirmados.find((a) => DateTime.fromISO(a.inicio).setZone(timezone) >= agora)
+  const statusSelecionado = ['CONFIRMADO', 'CONCLUIDO', 'CANCELADO', 'NAO_COMPARECEU'].includes(params.status || '') ? params.status : 'TODOS'
+  const listaVisivel = statusSelecionado === 'TODOS' ? lista : lista.filter((a) => a.status === statusSelecionado)
+  const urlAgenda = (status?: string) => `/admin/agenda?data=${dataSelecionada}${status && status !== 'TODOS' ? `&status=${status}` : ''}`
 
   return (
     <div className="stack-lg">
@@ -51,6 +54,14 @@ export default async function AgendaPage({ searchParams }: Props) {
         <div className="card stat"><span className="muted small">Próximo atendimento</span><strong>{proximo ? DateTime.fromISO(proximo.inicio).setZone(timezone).toFormat('HH:mm') : '—'}</strong><span className="muted small">{proximo?.nome_servico || 'Nenhum pendente'}</span></div>
       </section>
 
+      <nav className="agenda-filters" aria-label="Filtrar agenda por status">
+        <Link className={`filter-chip ${statusSelecionado === 'TODOS' ? 'active' : ''}`} href={urlAgenda('TODOS')}>Todos <span>{lista.length}</span></Link>
+        <Link className={`filter-chip ${statusSelecionado === 'CONFIRMADO' ? 'active' : ''}`} href={urlAgenda('CONFIRMADO')}>Pendentes <span>{confirmados.length}</span></Link>
+        <Link className={`filter-chip ${statusSelecionado === 'CONCLUIDO' ? 'active' : ''}`} href={urlAgenda('CONCLUIDO')}>Concluídos <span>{concluidos.length}</span></Link>
+        <Link className={`filter-chip ${statusSelecionado === 'CANCELADO' ? 'active' : ''}`} href={urlAgenda('CANCELADO')}>Cancelados <span>{cancelados.length}</span></Link>
+        <Link className={`filter-chip ${statusSelecionado === 'NAO_COMPARECEU' ? 'active' : ''}`} href={urlAgenda('NAO_COMPARECEU')}>Faltas <span>{faltas.length}</span></Link>
+      </nav>
+
       <div className="admin-grid">
         <section className="stack">
           <div className="card"><strong>Expediente</strong><div className="wrap" style={{ marginTop: 10 }}>{expediente?.length ? expediente.map((p) => <span className="badge badge-gray" key={p.id}>{String(p.hora_inicio).slice(0,5)} – {String(p.hora_fim).slice(0,5)}</span>) : <span className="muted">Fechado no expediente semanal.</span>}</div>{(aberturasExtras || []).map((p) => <div className="split" key={p.id} style={{ marginTop: 10 }}><span className="badge badge-green">Especial: {String(p.hora_inicio).slice(0,5)} – {String(p.hora_fim).slice(0,5)}{p.motivo ? ` · ${p.motivo}` : ''}</span><form action={removerAberturaExtra}><input type="hidden" name="id" value={p.id}/><input type="hidden" name="data" value={dataSelecionada}/><button className="btn">Remover</button></form></div>)}</div>
@@ -60,13 +71,13 @@ export default async function AgendaPage({ searchParams }: Props) {
             return <div className="card" key={b.id} style={{ borderColor: '#fde68a', background: '#fffbeb' }}><div className="split"><div><span className="badge badge-yellow">Bloqueado</span><h3>{inicio.toFormat('HH:mm')} – {fim.toFormat('HH:mm')}</h3>{b.motivo && <p className="muted">{b.motivo}</p>}</div><form action={removerBloqueio}><input type="hidden" name="id" value={b.id}/><input type="hidden" name="data" value={dataSelecionada}/><button className="btn">Remover</button></form></div></div>
           })}
 
-          {!lista.length && <div className="card empty-state"><strong>Agenda livre</strong><p className="muted">Nenhum atendimento agendado para esta data.</p></div>}
-          {lista.map((a) => {
+          {!listaVisivel.length && <div className="card empty-state"><strong>{lista.length ? 'Nenhum resultado' : 'Agenda livre'}</strong><p className="muted">{lista.length ? 'Não há atendimentos com este status nesta data.' : 'Nenhum atendimento agendado para esta data.'}</p></div>}
+          {listaVisivel.map((a) => {
             const inicio = DateTime.fromISO(a.inicio).setZone(timezone); const fim = DateTime.fromISO(a.fim).setZone(timezone)
             const cliente = Array.isArray(a.cliente) ? a.cliente[0] : a.cliente
             return <article className={`card appointment appointment-${String(a.status).toLowerCase()}`} key={a.id}>
               <div><div className="appointment-time">{inicio.toFormat('HH:mm')}</div><div className="muted small">até {fim.toFormat('HH:mm')}</div></div>
-              <div><div className="wrap"><strong>{cliente?.nome || 'Cliente'}</strong><Status status={a.status}/></div><p>{a.nome_servico}</p><p className="muted small">{formatarTelefone(cliente?.telefone)} · {formatarMoeda(a.preco)} · {a.origem === 'SITE' ? 'Online' : 'Manual'}</p>{a.observacoes && <p className="small">{a.observacoes}</p>}</div>
+              <div><div className="wrap"><strong>{cliente?.nome || 'Cliente'}</strong><Status status={a.status}/></div><p>{a.nome_servico}</p><p className="muted small">{formatarTelefone(cliente?.telefone)} · {formatarMoeda(a.preco)} · {a.origem === 'SITE' ? 'Online' : 'Manual'}</p>{cliente?.id && <Link className="appointment-client-link small" href={`/admin/clientes/${cliente.id}`}>Ver cliente →</Link>}{a.observacoes && <p className="small">{a.observacoes}</p>}</div>
               {a.status === 'CONFIRMADO' && <div className="wrap"><StatusButton id={a.id} data={dataSelecionada} status="CONCLUIDO">Concluir</StatusButton><StatusButton id={a.id} data={dataSelecionada} status="NAO_COMPARECEU">Faltou</StatusButton><StatusButton id={a.id} data={dataSelecionada} status="CANCELADO">Cancelar</StatusButton></div>}
             </article>
           })}
