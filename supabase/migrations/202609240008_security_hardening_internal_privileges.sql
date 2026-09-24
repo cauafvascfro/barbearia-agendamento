@@ -1,6 +1,13 @@
 -- Harden database privileges reported by Supabase advisors.
--- Event trigger functions are invoked by PostgreSQL, never through PostgREST RPC.
-revoke execute on function public.rls_auto_enable() from public, anon, authenticated;
+-- rls_auto_enable exists on hosted projects created by Supabase, but is not
+-- present in every local CLI database. Keep this migration portable.
+do $$
+begin
+  if to_regprocedure('public.rls_auto_enable()') is not null then
+    execute 'revoke execute on function public.rls_auto_enable() from public, anon, authenticated';
+  end if;
+end
+$$;
 
 -- private.rate_limits is internal-only. RLS adds defense in depth while the
 -- backend service role continues to bypass RLS for rate-limit operations.
