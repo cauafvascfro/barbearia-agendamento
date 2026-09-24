@@ -108,3 +108,32 @@ export async function removerBloqueio(formData: FormData) {
   revalidatePath('/admin/agenda')
   redirect(`/admin/agenda?data=${data}&sucesso=bloqueio_removido`)
 }
+
+export async function criarAberturaExtra(formData: FormData) {
+  const { supabase, claims } = await requireAdmin()
+  const data = String(formData.get('data') || '')
+  const horaInicio = String(formData.get('hora_inicio') || '')
+  const horaFim = String(formData.get('hora_fim') || '')
+  const motivo = String(formData.get('motivo') || '').trim()
+  if (!data || !horaInicio || !horaFim || horaInicio >= horaFim) redirect(`/admin/agenda?data=${data}&erro=abertura`)
+
+  const { data: criado, error } = await supabase.from('aberturas_extras').insert({
+    data, hora_inicio: horaInicio, hora_fim: horaFim, motivo: motivo || null,
+  }).select('id').single()
+  if (error) redirect(`/admin/agenda?data=${data}&erro=banco`)
+
+  await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'ABERTURA_EXTRA_CRIADA', entidade: 'ABERTURA_EXTRA', entidadeId: criado.id })
+  revalidatePath('/admin/agenda')
+  redirect(`/admin/agenda?data=${data}&sucesso=abertura`)
+}
+
+export async function removerAberturaExtra(formData: FormData) {
+  const { supabase, claims } = await requireAdmin()
+  const id = String(formData.get('id') || '')
+  const data = String(formData.get('data') || '')
+  if (!id) redirect(`/admin/agenda?data=${data}`)
+  await supabase.from('aberturas_extras').delete().eq('id', id)
+  await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'ABERTURA_EXTRA_REMOVIDA', entidade: 'ABERTURA_EXTRA', entidadeId: id })
+  revalidatePath('/admin/agenda')
+  redirect(`/admin/agenda?data=${data}&sucesso=abertura_removida`)
+}
