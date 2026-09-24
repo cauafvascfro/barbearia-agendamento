@@ -89,6 +89,12 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .filter-chip.active span { background: #27272a; color: #e4e4e7; }
 .appointment-client-link { display: inline-block; margin-top: 8px; font-weight: 700; color: #3f3f46; }
 .appointment-client-link:hover { text-decoration: underline; }
+.manual-times { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.manual-time { cursor: pointer; }
+.manual-time input { position: absolute; opacity: 0; pointer-events: none; }
+.manual-time span { display: flex; justify-content: center; border: 1px solid var(--border); border-radius: 9px; padding: 9px 6px; background: #fff; font-weight: 700; font-size: 13px; }
+.manual-time:hover span { background: #f4f4f5; }
+.manual-time.selected span { background: var(--dark); border-color: var(--dark); color: #fff; }
 .login-card { width: min(440px, 100%); background: #18181b; color: #fff; border: 1px solid #3f3f46; border-radius: 20px; padding: 30px; }
 .login-card .input { background: #09090b; color: #fff; border-color: #3f3f46; }
 .login-card .muted { color: #a1a1aa; }
@@ -102,6 +108,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 @media (max-width: 620px) {
   .grid-2, .grid-4, .admin-grid, .agenda-summary { grid-template-columns: 1fr; }
   .times { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .manual-times { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .split { align-items: flex-start; flex-direction: column; }
   .appointment { grid-template-columns: 1fr; }
   .nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
