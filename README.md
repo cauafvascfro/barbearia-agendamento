@@ -152,3 +152,6 @@ tests/
 ## Observação
 
 O faturamento mostrado no dashboard considera apenas agendamentos com status `CONCLUIDO`; reservas confirmadas, canceladas ou faltas não são tratadas como receita realizada.
+
+
+<!-- Vercel deployment sync: 2026-09-24 -->
