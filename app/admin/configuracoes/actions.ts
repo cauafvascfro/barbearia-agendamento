@@ -23,7 +23,7 @@ export async function salvarConfiguracoes(formData: FormData) {
   const whatsappAtivo = formData.get('whatsapp_ativo') === 'on'
   const lembreteHoras = Number(formData.get('lembrete_horas_antes'))
 
-  if (!nome || intervalo <= 0 || antecedenciaMinima < 0 || antecedenciaMaxima <= 0 || cancelamento < 0 || lembreteHoras < 1) {
+  if (!nome || !Number.isInteger(intervalo) || intervalo < 5 || intervalo > 240 || !Number.isInteger(antecedenciaMinima) || antecedenciaMinima < 0 || !Number.isInteger(antecedenciaMaxima) || antecedenciaMaxima < 1 || antecedenciaMaxima > 365 || !Number.isInteger(cancelamento) || cancelamento < 0 || !Number.isInteger(lembreteHoras) || lembreteHoras < 1 || lembreteHoras > 168) {
     redirect('/admin/configuracoes?erro=dados')
   }
 
@@ -46,6 +46,8 @@ export async function salvarConfiguracoes(formData: FormData) {
   if (error) redirect('/admin/configuracoes?erro=banco')
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'CONFIGURACOES_EDITADAS', entidade: 'CONFIGURACAO', entidadeId: config.id })
   revalidatePath('/admin/configuracoes')
+  revalidatePath('/admin')
+  revalidatePath('/agendar')
   redirect('/admin/configuracoes?sucesso=configuracao')
 }
 
@@ -79,5 +81,7 @@ export async function salvarExpediente(formData: FormData) {
 
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'EXPEDIENTE_EDITADO', entidade: 'HORARIO' })
   revalidatePath('/admin/configuracoes')
+  revalidatePath('/admin/agenda')
+  revalidatePath('/agendar')
   redirect('/admin/configuracoes?sucesso=expediente')
 }
