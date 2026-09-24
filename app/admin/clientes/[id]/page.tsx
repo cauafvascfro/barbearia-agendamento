@@ -20,11 +20,13 @@ export default async function ClientePage({ params }: Props) {
   const total=concluidos.reduce((n,a)=>n+Number(a.preco),0)
   const faltas=(agendamentos||[]).filter((a)=>a.status==='NAO_COMPARECEU').length
   const cancelamentos=(agendamentos||[]).filter((a)=>a.status==='CANCELADO').length
+  const ultimaVisita=concluidos[0] ? DateTime.fromISO(concluidos[0].inicio).setZone(timezone) : null
+  const telefoneWhatsapp=String(cliente.telefone||'').replace(/\\D/g,'')
 
   return <div className="stack-lg">
     <Link className="muted" href="/admin/clientes">← Clientes</Link>
-    <header><h1 className="page-title">{cliente.nome}</h1><p className="muted">{formatarTelefone(cliente.telefone)}</p></header>
-    <section className="grid-4"><Stat titulo="Atendimentos" valor={String(concluidos.length)}/><Stat titulo="Total gasto" valor={formatarMoeda(total)}/><Stat titulo="Cancelamentos" valor={String(cancelamentos)}/><Stat titulo="Faltas" valor={String(faltas)}/></section>
+    <header className="split"><div><h1 className="page-title">{cliente.nome}</h1><p className="muted">{formatarTelefone(cliente.telefone)}</p></div>{telefoneWhatsapp&&<a className="btn btn-primary" href={`https://wa.me/${telefoneWhatsapp}`} target="_blank" rel="noreferrer">Abrir WhatsApp</a>}</header>
+    <section className="grid-4"><Stat titulo="Atendimentos" valor={String(concluidos.length)}/><Stat titulo="Total gasto" valor={formatarMoeda(total)}/><Stat titulo="Última visita" valor={ultimaVisita?ultimaVisita.toFormat("dd/MM/yyyy"):"—"}/><Stat titulo="Ticket médio" valor={formatarMoeda(concluidos.length?total/concluidos.length:0)}/><Stat titulo="Cancelamentos" valor={String(cancelamentos)}/><Stat titulo="Faltas" valor={String(faltas)}/></section>
     <section className="stack"><h2>Histórico</h2>{!(agendamentos||[]).length ? <div className="card"><p className="muted">Sem histórico.</p></div> : (agendamentos||[]).map((a)=>{const inicio=DateTime.fromISO(a.inicio).setZone(timezone);return <article className="card split" key={a.id}><div><div className="wrap"><strong>{a.nome_servico}</strong><Status status={a.status}/></div><p className="muted small">{inicio.toFormat("dd/MM/yyyy 'às' HH:mm")}</p>{a.observacoes&&<p className="small">{a.observacoes}</p>}</div><div style={{textAlign:'right'}}><strong>{formatarMoeda(a.preco)}</strong><p className="muted small">{a.origem==='SITE'?'Online':'Manual'}</p></div></article>})}</section>
   </div>
 }
