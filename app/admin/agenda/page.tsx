@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { DateTime } from 'luxon'
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { formatarMoeda, formatarTelefone } from '@/lib/formatters'
-import { alterarStatusAgendamento, criarAgendamentoManual, criarBloqueio, removerBloqueio } from './actions'
+import { alterarStatusAgendamento, criarAgendamentoManual, criarBloqueio, removerBloqueio, criarAberturaExtra, removerAberturaExtra } from './actions'
 
 export const dynamic = 'force-dynamic'
 type Props = { searchParams: Promise<{ data?: string; erro?: string; sucesso?: string }> }
@@ -18,11 +18,12 @@ export default async function AgendaPage({ searchParams }: Props) {
   const inicioDia = dia.startOf('day').toUTC()
   const fimDia = dia.endOf('day').toUTC()
 
-  const [{ data: agendamentos }, { data: bloqueios }, { data: servicos }, { data: expediente }] = await Promise.all([
+  const [{ data: agendamentos }, { data: bloqueios }, { data: servicos }, { data: expediente }, { data: aberturasExtras }] = await Promise.all([
     supabase.from('agendamentos').select('id,inicio,fim,nome_servico,preco,status,origem,observacoes,cliente:clientes(id,nome,telefone)').gte('inicio', inicioDia.toISO()).lte('inicio', fimDia.toISO()).order('inicio'),
     supabase.from('bloqueios_agenda').select('*').lt('inicio', fimDia.toISO()).gt('fim', inicioDia.toISO()).order('inicio'),
     supabase.from('servicos').select('id,nome,preco,duracao_minutos').eq('ativo', true).order('nome'),
     supabase.from('horarios_funcionamento').select('*').eq('dia_semana', dia.weekday % 7).eq('ativo', true).order('hora_inicio'),
+    supabase.from('aberturas_extras').select('*').eq('data', dataSelecionada).order('hora_inicio'),
   ])
 
   return (
@@ -36,7 +37,7 @@ export default async function AgendaPage({ searchParams }: Props) {
 
       <div className="admin-grid">
         <section className="stack">
-          <div className="card"><strong>Expediente</strong><div className="wrap" style={{ marginTop: 10 }}>{expediente?.length ? expediente.map((p) => <span className="badge badge-gray" key={p.id}>{String(p.hora_inicio).slice(0,5)} – {String(p.hora_fim).slice(0,5)}</span>) : <span className="muted">Fechado neste dia.</span>}</div></div>
+          <div className="card"><strong>Expediente</strong><div className="wrap" style={{ marginTop: 10 }}>{expediente?.length ? expediente.map((p) => <span className="badge badge-gray" key={p.id}>{String(p.hora_inicio).slice(0,5)} – {String(p.hora_fim).slice(0,5)}</span>) : <span className="muted">Fechado no expediente semanal.</span>}</div>{(aberturasExtras || []).map((p) => <div className="split" key={p.id} style={{ marginTop: 10 }}><span className="badge badge-green">Especial: {String(p.hora_inicio).slice(0,5)} – {String(p.hora_fim).slice(0,5)}{p.motivo ? ` · ${p.motivo}` : ''}</span><form action={removerAberturaExtra}><input type="hidden" name="id" value={p.id}/><input type="hidden" name="data" value={dataSelecionada}/><button className="btn">Remover</button></form></div>)}</div>
 
           {(bloqueios || []).map((b) => {
             const inicio = DateTime.fromISO(b.inicio).setZone(timezone); const fim = DateTime.fromISO(b.fim).setZone(timezone)
@@ -57,6 +58,7 @@ export default async function AgendaPage({ searchParams }: Props) {
 
         <aside className="stack">
           <form action={criarAgendamentoManual} className="card stack"><h2>Novo agendamento</h2><input type="hidden" name="data" value={dataSelecionada}/><Campo label="Nome" name="nome" required/><Campo label="WhatsApp" name="telefone" required/><div className="field"><label>Serviço</label><select className="select" name="servico_id" required defaultValue=""><option value="" disabled>Selecione</option>{(servicos || []).map((s) => <option key={s.id} value={s.id}>{s.nome} — {s.duracao_minutos} min</option>)}</select></div><Campo label="Horário" name="hora" type="time" required/><div className="field"><label>Observações</label><textarea className="textarea" name="observacoes"/></div><button className="btn btn-primary">Agendar</button></form>
+          <form action={criarAberturaExtra} className="card stack"><h2>Abrir horário especial</h2><p className="muted small">Use para domingos, feriados ou qualquer data fora do expediente semanal.</p><input type="hidden" name="data" value={dataSelecionada}/><Campo label="Início" name="hora_inicio" type="time" required/><Campo label="Fim" name="hora_fim" type="time" required/><Campo label="Motivo" name="motivo"/><button className="btn btn-primary">Abrir nesta data</button></form>
           <form action={criarBloqueio} className="card stack"><h2>Bloquear horário</h2><input type="hidden" name="data" value={dataSelecionada}/><Campo label="Início" name="hora_inicio" type="time" required/><Campo label="Fim" name="hora_fim" type="time" required/><Campo label="Motivo" name="motivo"/><button className="btn">Bloquear</button></form>
         </aside>
       </div>
@@ -67,4 +69,4 @@ export default async function AgendaPage({ searchParams }: Props) {
 function Campo({ label, name, type='text', required=false }: { label: string; name: string; type?: string; required?: boolean }) { return <div className="field"><label>{label}</label><input className="input" name={name} type={type} required={required}/></div> }
 function StatusButton({ id, data, status, children }: { id:string; data:string; status:string; children:React.ReactNode }) { return <form action={alterarStatusAgendamento}><input type="hidden" name="id" value={id}/><input type="hidden" name="data" value={data}/><input type="hidden" name="status" value={status}/><button className="btn">{children}</button></form> }
 function Status({ status }: { status:string }) { const map:Record<string,[string,string]>={CONFIRMADO:['Confirmado','badge-blue'],CONCLUIDO:['Concluído','badge-green'],CANCELADO:['Cancelado','badge-gray'],NAO_COMPARECEU:['Não compareceu','badge-red']}; const item=map[status]||[status,'badge-gray']; return <span className={`badge ${item[1]}`}>{item[0]}</span> }
-function mensagemErro(erro:string) { const m:Record<string,string>={dados:'Preencha os dados obrigatórios.',ocupado:'Este horário já está ocupado.',bloqueado:'Este horário está bloqueado.',expediente:'O horário está fora do expediente.',antecedencia:'O horário está dentro da antecedência mínima configurada.',bloqueio:'Período de bloqueio inválido.',bloqueio_conflito:'Existe um atendimento neste período.',status:'Status inválido.',banco:'Não foi possível concluir a operação.'}; return m[erro]||'Ocorreu um erro.' }
+function mensagemErro(erro:string) { const m:Record<string,string>={dados:'Preencha os dados obrigatórios.',ocupado:'Este horário já está ocupado.',bloqueado:'Este horário está bloqueado.',expediente:'O horário está fora do expediente.',antecedencia:'O horário está dentro da antecedência mínima configurada.',bloqueio:'Período de bloqueio inválido.',bloqueio_conflito:'Existe um atendimento neste período.',abertura:'Horário especial inválido.',status:'Status inválido.',banco:'Não foi possível concluir a operação.'}; return m[erro]||'Ocorreu um erro.' }
