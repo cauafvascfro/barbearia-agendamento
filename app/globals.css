@@ -134,3 +134,8 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .customer-search .btn { flex: 1; }
   .appointment { grid-template-columns: 1fr; }
 }
+
+.report-filter { display:flex; align-items:end; gap:8px; flex-wrap:wrap; }
+.report-filter .field { min-width:145px; }
+.report-row { grid-template-columns:1fr auto; align-items:center; }
+@media (max-width:620px) { .report-filter, .report-filter .field { width:100%; } .report-filter .btn { flex:1; } }
