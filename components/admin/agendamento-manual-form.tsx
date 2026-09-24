@@ -6,9 +6,9 @@ type Servico = { id:string; nome:string; duracao_minutos:number }
 type Cliente = { id:string; nome:string; telefone:string }
 type Horario = { inicio:string; fim:string; hora:string }
 
-export function AgendamentoManualForm({ data, servicos, clientes, action }:{ data:string; servicos:Servico[]; clientes:Cliente[]; action:(formData:FormData)=>void|Promise<void> }) {
+export function AgendamentoManualForm({ data, servicos, clientes, action, clienteInicial='' }:{ data:string; servicos:Servico[]; clientes:Cliente[]; action:(formData:FormData)=>void|Promise<void>; clienteInicial?:string }) {
   const [servicoId,setServicoId]=useState('')
-  const [clienteId,setClienteId]=useState('')
+  const [clienteId,setClienteId]=useState(clienteInicial)
   const [buscaCliente,setBuscaCliente]=useState('')
   const [horarios,setHorarios]=useState<Horario[]>([])
   const [hora,setHora]=useState('')
