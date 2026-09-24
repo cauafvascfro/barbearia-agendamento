@@ -19,7 +19,7 @@ export default async function ClientesPage({ searchParams }: Props) {
   for (const a of agendamentos || []) if (a.status === 'CONCLUIDO') { const s=stats.get(a.cliente_id); if(s){s.atendimentos++;s.gasto+=Number(a.preco)} }
 
   return <div className="stack-lg">
-    <header className="split"><div><p className="eyebrow">Relacionamento</p><h1 className="page-title">Clientes</h1><p className="muted">Histórico e frequência de atendimento.</p></div><form className="wrap"><input className="input" style={{width:260}} name="busca" defaultValue={termo} placeholder="Nome ou telefone"/><button className="btn btn-primary">Buscar</button></form></header>
+    <header className="split"><div><p className="eyebrow">Relacionamento</p><h1 className="page-title">Clientes</h1><p className="muted">Histórico e frequência de atendimento.</p></div><form className="customer-search"><input className="input" name="busca" defaultValue={termo} placeholder="Nome ou telefone"/><button className="btn btn-primary">Buscar</button>{termo&&<Link className="btn" href="/admin/clientes">Limpar</Link>}</form></header>
     <section className="table-list">
       {!clientes?.length ? <div className="table-row"><p className="muted">Nenhum cliente encontrado.</p></div> : clientes.map((c) => { const s=stats.get(c.id); return <Link className="table-row split" href={`/admin/clientes/${c.id}`} key={c.id}><div><strong>{c.nome}</strong><p className="muted small">{formatarTelefone(c.telefone)}</p></div><div className="wrap"><span className="badge badge-gray">{s?.atendimentos || 0} atend.</span><strong>{formatarMoeda(s?.gasto || 0)}</strong><span>Ver histórico →</span></div></Link> })}
     </section>
