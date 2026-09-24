@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { DateTime } from 'luxon'
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { formatarMoeda, formatarTelefone } from '@/lib/formatters'
+import { AgendamentoManualForm } from '@/components/admin/agendamento-manual-form'
 import { alterarStatusAgendamento, criarAgendamentoManual, criarBloqueio, removerBloqueio, criarAberturaExtra, removerAberturaExtra } from './actions'
 
 export const dynamic = 'force-dynamic'
@@ -85,7 +86,7 @@ export default async function AgendaPage({ searchParams }: Props) {
         </section>
 
         <aside className="stack">
-          <form action={criarAgendamentoManual} className="card stack"><h2>Novo agendamento</h2><input type="hidden" name="data" value={dataSelecionada}/><div className="field"><label>Cliente cadastrado <span className="muted small">(opcional)</span></label><select className="select" name="cliente_id" defaultValue=""><option value="">Novo cliente / preencher abaixo</option>{(clientes || []).map((cliente) => <option key={cliente.id} value={cliente.id}>{cliente.nome} — {formatarTelefone(cliente.telefone)}</option>)}</select><p className="muted small">Se selecionar um cliente, nome e telefone serão usados automaticamente. Para um novo cliente, preencha os campos abaixo.</p></div><Campo label="Nome do novo cliente" name="nome"/><Campo label="Telefone do novo cliente" name="telefone"/><div className="field"><label>Serviço</label><select className="select" name="servico_id" required defaultValue=""><option value="" disabled>Selecione</option>{(servicos || []).map((s) => <option key={s.id} value={s.id}>{s.nome} — {s.duracao_minutos} min</option>)}</select></div><Campo label="Horário" name="hora" type="time" required/><div className="field"><label>Observações</label><textarea className="textarea" name="observacoes"/></div><button className="btn btn-primary">Agendar</button></form>
+          <AgendamentoManualForm data={dataSelecionada} servicos={servicos || []} clientes={(clientes || []).map((cliente) => ({ ...cliente, telefone: formatarTelefone(cliente.telefone) }))} action={criarAgendamentoManual}/>
           <form action={criarAberturaExtra} className="card stack"><h2>Abrir horário especial</h2><p className="muted small">Use para domingos, feriados ou qualquer data fora do expediente semanal.</p><input type="hidden" name="data" value={dataSelecionada}/><Campo label="Início" name="hora_inicio" type="time" required/><Campo label="Fim" name="hora_fim" type="time" required/><Campo label="Motivo" name="motivo"/><button className="btn btn-primary">Abrir nesta data</button></form>
           <form action={criarBloqueio} className="card stack"><h2>Bloquear horário</h2><input type="hidden" name="data" value={dataSelecionada}/><Campo label="Início" name="hora_inicio" type="time" required/><Campo label="Fim" name="hora_fim" type="time" required/><Campo label="Motivo" name="motivo"/><button className="btn">Bloquear</button></form>
         </aside>
