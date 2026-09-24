@@ -26,6 +26,15 @@ export default async function AgendaPage({ searchParams }: Props) {
     supabase.from('aberturas_extras').select('*').eq('data', dataSelecionada).order('hora_inicio'),
   ])
 
+  const lista = agendamentos || []
+  const confirmados = lista.filter((a) => a.status === 'CONFIRMADO')
+  const concluidos = lista.filter((a) => a.status === 'CONCLUIDO')
+  const cancelados = lista.filter((a) => a.status === 'CANCELADO')
+  const faltas = lista.filter((a) => a.status === 'NAO_COMPARECEU')
+  const faturamentoDia = concluidos.reduce((total, a) => total + Number(a.preco), 0)
+  const agora = DateTime.now().setZone(timezone)
+  const proximo = confirmados.find((a) => DateTime.fromISO(a.inicio).setZone(timezone) >= agora)
+
   return (
     <div className="stack-lg">
       <header className="split">
@@ -34,6 +43,13 @@ export default async function AgendaPage({ searchParams }: Props) {
       </header>
       {params.erro && <div className="notice notice-error">{mensagemErro(params.erro)}</div>}
       {params.sucesso && <div className="notice notice-success">Operação realizada com sucesso.</div>}
+
+      <section className="agenda-summary">
+        <div className="card stat"><span className="muted small">Agendados</span><strong>{lista.length}</strong><span className="muted small">{confirmados.length} pendentes</span></div>
+        <div className="card stat"><span className="muted small">Concluídos</span><strong>{concluidos.length}</strong><span className="muted small">{cancelados.length} cancelados · {faltas.length} faltas</span></div>
+        <div className="card stat"><span className="muted small">Faturamento do dia</span><strong>{formatarMoeda(faturamentoDia)}</strong><span className="muted small">Somente atendimentos concluídos</span></div>
+        <div className="card stat"><span className="muted small">Próximo atendimento</span><strong>{proximo ? DateTime.fromISO(proximo.inicio).setZone(timezone).toFormat('HH:mm') : '—'}</strong><span className="muted small">{proximo?.nome_servico || 'Nenhum pendente'}</span></div>
+      </section>
 
       <div className="admin-grid">
         <section className="stack">
@@ -44,11 +60,11 @@ export default async function AgendaPage({ searchParams }: Props) {
             return <div className="card" key={b.id} style={{ borderColor: '#fde68a', background: '#fffbeb' }}><div className="split"><div><span className="badge badge-yellow">Bloqueado</span><h3>{inicio.toFormat('HH:mm')} – {fim.toFormat('HH:mm')}</h3>{b.motivo && <p className="muted">{b.motivo}</p>}</div><form action={removerBloqueio}><input type="hidden" name="id" value={b.id}/><input type="hidden" name="data" value={dataSelecionada}/><button className="btn">Remover</button></form></div></div>
           })}
 
-          {!agendamentos?.length && <div className="card"><p className="muted">Nenhum atendimento agendado.</p></div>}
-          {(agendamentos || []).map((a) => {
+          {!lista.length && <div className="card empty-state"><strong>Agenda livre</strong><p className="muted">Nenhum atendimento agendado para esta data.</p></div>}
+          {lista.map((a) => {
             const inicio = DateTime.fromISO(a.inicio).setZone(timezone); const fim = DateTime.fromISO(a.fim).setZone(timezone)
             const cliente = Array.isArray(a.cliente) ? a.cliente[0] : a.cliente
-            return <article className="card appointment" key={a.id}>
+            return <article className={`card appointment appointment-${String(a.status).toLowerCase()}`} key={a.id}>
               <div><div className="appointment-time">{inicio.toFormat('HH:mm')}</div><div className="muted small">até {fim.toFormat('HH:mm')}</div></div>
               <div><div className="wrap"><strong>{cliente?.nome || 'Cliente'}</strong><Status status={a.status}/></div><p>{a.nome_servico}</p><p className="muted small">{formatarTelefone(cliente?.telefone)} · {formatarMoeda(a.preco)} · {a.origem === 'SITE' ? 'Online' : 'Manual'}</p>{a.observacoes && <p className="small">{a.observacoes}</p>}</div>
               {a.status === 'CONFIRMADO' && <div className="wrap"><StatusButton id={a.id} data={dataSelecionada} status="CONCLUIDO">Concluir</StatusButton><StatusButton id={a.id} data={dataSelecionada} status="NAO_COMPARECEU">Faltou</StatusButton><StatusButton id={a.id} data={dataSelecionada} status="CANCELADO">Cancelar</StatusButton></div>}
