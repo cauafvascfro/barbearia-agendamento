@@ -15,14 +15,14 @@ test('página pública carrega serviços do banco', async ({ page }) => {
   await page.goto('/agendar')
 
   await expect(page).toHaveURL(/\/agendar/)
-  await expect(page.getByRole('heading', { name: 'Barbearia Demo' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /NEW STYLE/i })).toBeVisible()
   await expect(page.getByRole('button', { name: /Corte masculino/ }).first()).toBeVisible()
 })
 
 test('rota administrativa exige autenticação', async ({ page }) => {
   await page.goto('/admin')
   await expect(page).toHaveURL(/\/login/)
-  await expect(page.getByRole('heading', { name: 'Barbearia' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'New Style' })).toBeVisible()
 })
 
 test('cliente agenda e cancela um horário pelo link seguro', async ({ page }) => {
