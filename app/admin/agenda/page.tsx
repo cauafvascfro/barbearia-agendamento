@@ -86,7 +86,7 @@ export default async function AgendaPage({ searchParams }: Props) {
         </section>
 
         <aside className="stack">
-          <AgendamentoManualForm data={dataSelecionada} servicos={servicos || []} clientes={(clientes || []).map((cliente) => ({ ...cliente, telefone: formatarTelefone(cliente.telefone) }))} action={criarAgendamentoManual}/>
+          <AgendamentoManualForm data={dataSelecionada} servicos={servicos || []} clientes={clientes || []} action={criarAgendamentoManual}/>
           <form action={criarAberturaExtra} className="card stack"><h2>Abrir horário especial</h2><p className="muted small">Use para domingos, feriados ou qualquer data fora do expediente semanal.</p><input type="hidden" name="data" value={dataSelecionada}/><Campo label="Início" name="hora_inicio" type="time" required/><Campo label="Fim" name="hora_fim" type="time" required/><Campo label="Motivo" name="motivo"/><button className="btn btn-primary">Abrir nesta data</button></form>
           <form action={criarBloqueio} className="card stack"><h2>Bloquear horário</h2><input type="hidden" name="data" value={dataSelecionada}/><Campo label="Início" name="hora_inicio" type="time" required/><Campo label="Fim" name="hora_fim" type="time" required/><Campo label="Motivo" name="motivo"/><button className="btn">Bloquear</button></form>
         </aside>
