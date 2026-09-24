@@ -36,7 +36,7 @@ test('cliente agenda e cancela um horário pelo link seguro', async ({ page }) =
   await primeiroHorario.click()
 
   await page.getByLabel('Nome').fill('Cliente Teste E2E')
-  await page.getByLabel('WhatsApp').fill('(75) 99999-9999')
+  await page.getByLabel('Telefone').fill('(75) 99999-9999')
   const respostaAgendamento = page.waitForResponse(
     (response) =>
       response.url().endsWith('/api/agendamentos') &&
