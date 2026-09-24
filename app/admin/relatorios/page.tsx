@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { formatarMoeda } from '@/lib/formatters'
 
 type Props={searchParams:Promise<{inicio?:string;fim?:string}>}
-type Agendamento={id:string;inicio:string;status:string;preco:number|string|null;nome_servico_snapshot:string|null;cliente_id:string|null}
+type Agendamento={id:string;inicio:string;status:string;preco:number|string|null;nome_servico:string|null;cliente_id:string|null}
 
 export default async function RelatoriosPage({searchParams}:Props){
   const params=await searchParams
@@ -19,7 +19,7 @@ export default async function RelatoriosPage({searchParams}:Props){
   const dias=Math.max(1,Math.ceil(fim.diff(inicio,'days').days))
   const fimAnterior=inicio.minus({milliseconds:1})
   const inicioAnterior=fimAnterior.minus({days:dias}).startOf('day')
-  const campos='id,inicio,status,preco,nome_servico_snapshot,cliente_id'
+  const campos='id,inicio,status,preco,nome_servico,cliente_id'
   const [{data:agendamentos},{data:anteriores}]=await Promise.all([
     supabase.from('agendamentos').select(campos).gte('inicio',inicio.toUTC().toISO()).lte('inicio',fim.toUTC().toISO()).order('inicio'),
     supabase.from('agendamentos').select(campos).gte('inicio',inicioAnterior.toUTC().toISO()).lte('inicio',fimAnterior.toUTC().toISO())
@@ -35,7 +35,7 @@ export default async function RelatoriosPage({searchParams}:Props){
   const ticket=concluidos.length?faturamento/concluidos.length:0
   const ticketAnterior=concluidosAnterior.length?faturamentoAnterior/concluidosAnterior.length:0
   const clientesUnicos=new Set(concluidos.map(a=>a.cliente_id).filter(Boolean)).size
-  const servicos=Object.entries(concluidos.reduce<Record<string,{qtd:number,total:number}>>((acc,a)=>{const nome=a.nome_servico_snapshot||'Serviço';acc[nome]??={qtd:0,total:0};acc[nome].qtd++;acc[nome].total+=Number(a.preco||0);return acc},{})).sort((a,b)=>b[1].qtd-a[1].qtd)
+  const servicos=Object.entries(concluidos.reduce<Record<string,{qtd:number,total:number}>>((acc,a)=>{const nome=a.nome_servico||'Serviço';acc[nome]??={qtd:0,total:0};acc[nome].qtd++;acc[nome].total+=Number(a.preco||0);return acc},{})).sort((a,b)=>b[1].qtd-a[1].qtd)
   const meses=Array.from({length:6},(_,i)=>agora.startOf('month').minus({months:5-i}))
   const inicioGrafico=meses[0].startOf('month')
   const {data:historico}=await supabase.from('agendamentos').select(campos).eq('status','CONCLUIDO').gte('inicio',inicioGrafico.toUTC().toISO()).lte('inicio',agora.endOf('month').toUTC().toISO())
