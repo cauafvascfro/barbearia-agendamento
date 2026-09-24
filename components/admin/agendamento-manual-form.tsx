@@ -9,10 +9,15 @@ type Horario = { inicio:string; fim:string; hora:string }
 export function AgendamentoManualForm({ data, servicos, clientes, action }:{ data:string; servicos:Servico[]; clientes:Cliente[]; action:(formData:FormData)=>void|Promise<void> }) {
   const [servicoId,setServicoId]=useState('')
   const [clienteId,setClienteId]=useState('')
+  const [buscaCliente,setBuscaCliente]=useState('')
   const [horarios,setHorarios]=useState<Horario[]>([])
   const [hora,setHora]=useState('')
   const [carregando,setCarregando]=useState(false)
   const [erro,setErro]=useState('')
+  const termo=buscaCliente.trim().toLocaleLowerCase('pt-BR')
+  const digitos=buscaCliente.replace(/\D/g,'')
+  const clientesFiltrados=termo ? clientes.filter(c=>c.nome.toLocaleLowerCase('pt-BR').includes(termo)||(digitos.length>=3&&c.telefone.replace(/\D/g,'').includes(digitos))).slice(0,8) : []
+  const clienteSelecionado=clientes.find(c=>c.id===clienteId)
 
   useEffect(()=>{
     setHora(''); setHorarios([]); setErro('')
@@ -37,10 +42,11 @@ export function AgendamentoManualForm({ data, servicos, clientes, action }:{ dat
     <input type="hidden" name="data" value={data}/>
     <div className="field">
       <label>Cliente cadastrado <span className="muted small">(opcional)</span></label>
-      <select className="select" name="cliente_id" value={clienteId} onChange={e=>setClienteId(e.target.value)}>
-        <option value="">Novo cliente / preencher abaixo</option>
-        {clientes.map(c=><option key={c.id} value={c.id}>{c.nome} — {c.telefone}</option>)}
-      </select>
+      <input type="hidden" name="cliente_id" value={clienteId}/>
+      {clienteSelecionado?<div className="selected-client"><div><strong>{clienteSelecionado.nome}</strong><span className="muted small">{clienteSelecionado.telefone}</span></div><button className="btn" type="button" onClick={()=>{setClienteId('');setBuscaCliente('')}}>Trocar</button></div>:<>
+        <input className="input" value={buscaCliente} onChange={e=>setBuscaCliente(e.target.value)} placeholder="Busque por nome ou telefone" autoComplete="off"/>
+        {termo&&<div className="client-search-results">{clientesFiltrados.length?clientesFiltrados.map(c=><button type="button" key={c.id} onClick={()=>{setClienteId(c.id);setBuscaCliente('')}}><strong>{c.nome}</strong><span>{c.telefone}</span></button>):<p className="muted small">Nenhum cliente encontrado. Preencha os dados abaixo para cadastrar um novo.</p>}</div>}
+      </>}
     </div>
     {!clienteId&&<>
       <div className="field"><label>Nome do novo cliente</label><input className="input" name="nome" required maxLength={120}/></div>
