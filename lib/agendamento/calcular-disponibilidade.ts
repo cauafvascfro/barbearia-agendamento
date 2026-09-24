@@ -20,14 +20,13 @@ export async function calcularDisponibilidade({ data, duracaoMinutos, ignorarAge
   const limite = agora.startOf('day').plus({ days: configuracao.antecedencia_maxima_dias })
   if (dia.startOf('day') < agora.startOf('day') || dia.startOf('day') > limite) return []
 
-  const { data: expediente } = await supabase
-    .from('horarios_funcionamento')
-    .select('*')
-    .eq('dia_semana', dia.weekday % 7)
-    .eq('ativo', true)
-    .order('hora_inicio')
-
-  if (!expediente?.length) return []
+  const [{ data: expedienteSemanal }, { data: aberturasExtras }] = await Promise.all([
+    supabase.from('horarios_funcionamento').select('hora_inicio,hora_fim').eq('dia_semana', dia.weekday % 7).eq('ativo', true).order('hora_inicio'),
+    supabase.from('aberturas_extras').select('hora_inicio,hora_fim').eq('data', data).order('hora_inicio'),
+  ])
+  const expediente = [...(expedienteSemanal || []), ...(aberturasExtras || [])]
+    .sort((a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)))
+  if (!expediente.length) return []
 
   const inicioDia = dia.startOf('day').toUTC()
   const fimDia = dia.endOf('day').toUTC()
