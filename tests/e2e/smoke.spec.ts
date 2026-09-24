@@ -37,7 +37,21 @@ test('cliente agenda e cancela um horário pelo link seguro', async ({ page }) =
 
   await page.getByLabel('Nome').fill('Cliente Teste E2E')
   await page.getByLabel('WhatsApp').fill('(75) 99999-9999')
+  const respostaAgendamento = page.waitForResponse(
+    (response) =>
+      response.url().endsWith('/api/agendamentos') &&
+      response.request().method() === 'POST',
+  )
+
   await page.getByRole('button', { name: 'Confirmar agendamento' }).click()
+
+  const resposta = await respostaAgendamento
+  const corpo = await resposta.text()
+
+  expect(
+    resposta.status(),
+    `POST /api/agendamentos respondeu ${resposta.status()}: ${corpo}`,
+  ).toBe(201)
 
   await expect(page).toHaveURL(/\/agendamento\/[0-9a-f-]{36}$/i, { timeout: 15_000 })
   await expect(page.getByRole('heading', { name: 'Seu agendamento' })).toBeVisible()
