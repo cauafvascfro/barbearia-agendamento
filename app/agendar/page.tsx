@@ -10,10 +10,8 @@ export default async function AgendarPage() {
     supabase.from('servicos').select('id,nome,descricao,preco,duracao_minutos').eq('ativo', true).order('nome'),
     supabase.from('configuracoes').select('*').limit(1).single(),
   ])
-
   if (!config) return <main className="public-shell"><div className="container"><div className="notice notice-error">Sistema ainda não configurado.</div></div></main>
   const timezone = config.timezone || 'America/Bahia'
   const hoje = DateTime.now().setZone(timezone)
-
-  return <main className="public-shell"><div className="container" style={{maxWidth:760}}><header style={{textAlign:'center',marginBottom:28}}><p className="eyebrow">Agendamento online</p><h1 className="page-title">{config.nome_barbearia}</h1><p className="muted">Escolha o serviço, data e horário.</p></header><AgendamentoForm servicos={servicos || []} dataMinima={hoje.toISODate()!} dataMaxima={hoje.plus({days:config.antecedencia_maxima_dias}).toISODate()!}/></div></main>
+  return <main className="public-shell newstyle-public"><div className="container booking-container"><header className="brand-hero"><div className="brand-mark" aria-hidden="true"><span className="brand-crown">♛</span><strong>NS</strong><span className="brand-moustache">〰</span></div><div><p className="eyebrow">Agendamento online</p><h1 className="brand-title">NEW STYLE</h1><p className="brand-subtitle">BARBEARIA</p><p className="muted brand-copy">Seu horário, seu estilo. Escolha o serviço, a data e o melhor horário para você.</p></div></header><AgendamentoForm servicos={servicos || []} dataMinima={hoje.toISODate()!} dataMaxima={hoje.plus({days:config.antecedencia_maxima_dias}).toISODate()!}/><footer className="public-footer">New Style Barbearia · Agendamento online</footer></div></main>
 }
