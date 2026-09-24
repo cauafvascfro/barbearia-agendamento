@@ -139,3 +139,11 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .report-filter .field { min-width:145px; }
 .report-row { grid-template-columns:1fr auto; align-items:center; }
 @media (max-width:620px) { .report-filter, .report-filter .field { width:100%; } .report-filter .btn { flex:1; } }
+
+.revenue-chart { display:grid; grid-template-columns:repeat(6,minmax(70px,1fr)); gap:14px; align-items:end; min-height:260px; overflow-x:auto; padding-top:12px; }
+.chart-column { min-width:70px; display:grid; gap:6px; text-align:center; align-items:end; }
+.chart-value { font-size:11px; font-weight:700; white-space:nowrap; }
+.chart-track { height:160px; display:flex; align-items:flex-end; justify-content:center; border-bottom:1px solid var(--border); }
+.chart-bar { width:min(42px,70%); min-height:0; background:var(--dark); border-radius:7px 7px 2px 2px; transition:height .2s ease; }
+.chart-column>strong { text-transform:capitalize; font-size:13px; }
+@media (max-width:620px) { .revenue-chart { grid-template-columns:repeat(6,82px); } }
