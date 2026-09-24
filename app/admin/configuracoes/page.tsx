@@ -31,14 +31,14 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
         <div className="grid-2">
           <div className="field"><label>Nome da barbearia</label><input className="input" name="nome_barbearia" required defaultValue={config.nome_barbearia} /></div>
           <div className="field"><label>Telefone</label><input className="input" name="telefone" defaultValue={config.telefone || ''} /></div>
-          <div className="field"><label>WhatsApp</label><input className="input" name="whatsapp" defaultValue={config.whatsapp || ''} /></div>
+          <input type="hidden" name="whatsapp" value={config.whatsapp || ''} />
           <div className="field"><label>Endereço</label><input className="input" name="endereco" defaultValue={config.endereco || ''} /></div>
           <div className="field"><label>Intervalo entre inícios (min)</label><input className="input" type="number" min="5" name="intervalo_agendamento" defaultValue={config.intervalo_agendamento} /></div>
           <div className="field"><label>Antecedência mínima (min)</label><input className="input" type="number" min="0" name="antecedencia_minima_minutos" defaultValue={config.antecedencia_minima_minutos} /></div>
           <div className="field"><label>Agenda aberta por (dias)</label><input className="input" type="number" min="1" name="antecedencia_maxima_dias" defaultValue={config.antecedencia_maxima_dias} /></div>
           <div className="field"><label>Prazo mínimo para cancelar/remarcar (h)</label><input className="input" type="number" min="0" name="cancelamento_minimo_horas" defaultValue={config.cancelamento_minimo_horas} /></div>
-          <div className="field"><label>Lembrete (horas antes)</label><input className="input" type="number" min="1" name="lembrete_horas_antes" defaultValue={config.lembrete_horas_antes} /></div>
-          <label className="field"><span>WhatsApp automático</span><span><input name="whatsapp_ativo" type="checkbox" defaultChecked={config.whatsapp_ativo} /> Ativar quando credenciais/templates estiverem prontos</span></label>
+          <input type="hidden" name="lembrete_horas_antes" value={config.lembrete_horas_antes} />
+          <input type="hidden" name="whatsapp_ativo" value={config.whatsapp_ativo ? 'on' : ''} />
         </div>
         <button className="btn btn-primary">Salvar configurações</button>
       </form>
