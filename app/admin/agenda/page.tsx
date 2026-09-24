@@ -38,6 +38,8 @@ export default async function AgendaPage({ searchParams }: Props) {
   const proximo = confirmados.find((a) => DateTime.fromISO(a.inicio).setZone(timezone) >= agora)
   const statusSelecionado = ['CONFIRMADO', 'CONCLUIDO', 'CANCELADO', 'NAO_COMPARECEU'].includes(params.status || '') ? params.status : 'TODOS'
   const listaVisivel = statusSelecionado === 'TODOS' ? lista : lista.filter((a) => a.status === statusSelecionado)
+  const ativosVisiveis = listaVisivel.filter((a) => a.status === 'CONFIRMADO')
+  const finalizadosVisiveis = listaVisivel.filter((a) => a.status !== 'CONFIRMADO')
   const urlAgenda = (status?: string) => `/admin/agenda?data=${dataSelecionada}${status && status !== 'TODOS' ? `&status=${status}` : ''}`
 
   return (
@@ -74,15 +76,10 @@ export default async function AgendaPage({ searchParams }: Props) {
           })}
 
           {!listaVisivel.length && <div className="card empty-state"><strong>{lista.length ? 'Nenhum resultado' : 'Agenda livre'}</strong><p className="muted">{lista.length ? 'Não há atendimentos com este status nesta data.' : 'Nenhum atendimento agendado para esta data.'}</p></div>}
-          {listaVisivel.map((a) => {
-            const inicio = DateTime.fromISO(a.inicio).setZone(timezone); const fim = DateTime.fromISO(a.fim).setZone(timezone)
-            const cliente = Array.isArray(a.cliente) ? a.cliente[0] : a.cliente
-            return <article className={`card appointment appointment-${String(a.status).toLowerCase()}`} key={a.id}>
-              <div><div className="appointment-time">{inicio.toFormat('HH:mm')}</div><div className="muted small">até {fim.toFormat('HH:mm')}</div></div>
-              <div><div className="wrap"><strong>{cliente?.nome || 'Cliente'}</strong><Status status={a.status}/></div><p>{a.nome_servico}</p><p className="muted small">{formatarTelefone(cliente?.telefone)} · {formatarMoeda(a.preco)} · {a.origem === 'SITE' ? 'Online' : 'Manual'}</p>{cliente?.id && <Link className="appointment-client-link small" href={`/admin/clientes/${cliente.id}`}>Ver cliente →</Link>}{a.observacoes && <p className="small">{a.observacoes}</p>}</div>
-              {a.status === 'CONFIRMADO' && <div className="wrap"><StatusButton id={a.id} data={dataSelecionada} status="CONCLUIDO">Concluir</StatusButton><StatusButton id={a.id} data={dataSelecionada} status="NAO_COMPARECEU">Faltou</StatusButton><StatusButton id={a.id} data={dataSelecionada} status="CANCELADO">Cancelar</StatusButton></div>}
-            </article>
-          })}
+          {!!ativosVisiveis.length && <div className="agenda-section-title"><strong>Próximos e pendentes</strong><span className="badge badge-blue">{ativosVisiveis.length}</span></div>}
+          {ativosVisiveis.map((a) => <AppointmentCard key={a.id} a={a} timezone={timezone} data={dataSelecionada} destaque={proximo?.id === a.id}/>)}
+          {!!finalizadosVisiveis.length && <div className="agenda-section-title"><strong>Finalizados</strong><span className="badge badge-gray">{finalizadosVisiveis.length}</span></div>}
+          {finalizadosVisiveis.map((a) => <AppointmentCard key={a.id} a={a} timezone={timezone} data={dataSelecionada}/>)}
         </section>
 
         <aside className="stack">
@@ -95,7 +92,9 @@ export default async function AgendaPage({ searchParams }: Props) {
   )
 }
 
+function AppointmentCard({a,timezone,data,destaque=false}:{a:any;timezone:string;data:string;destaque?:boolean}) { const inicio=DateTime.fromISO(a.inicio).setZone(timezone); const fim=DateTime.fromISO(a.fim).setZone(timezone); const cliente=Array.isArray(a.cliente)?a.cliente[0]:a.cliente; return <article className={`card appointment appointment-${String(a.status).toLowerCase()} ${destaque?'appointment-next':''}`}><div><div className="appointment-time">{inicio.toFormat('HH:mm')}</div><div className="muted small">até {fim.toFormat('HH:mm')}</div></div><div><div className="wrap"><strong>{cliente?.nome||'Cliente'}</strong>{destaque&&<span className="badge badge-yellow">Próximo</span>}<Status status={a.status}/></div><p>{a.nome_servico}</p><p className="muted small">{formatarTelefone(cliente?.telefone)} · {formatarMoeda(a.preco)} · {a.origem==='SITE'?'Online':'Manual'}</p><div className="wrap appointment-links">{cliente?.id&&<Link className="appointment-client-link small" href={`/admin/clientes/${cliente.id}`}>Ver cliente →</Link>}{cliente?.id&&<Link className="appointment-client-link small" href={`/admin/agenda?data=${data}&cliente=${cliente.id}`}>Agendar novamente</Link>}</div>{a.observacoes&&<p className="small">{a.observacoes}</p>}</div>{a.status==='CONFIRMADO'&&<div className="appointment-actions"><StatusButton id={a.id} data={data} status="CONCLUIDO" primary>✓ Concluir</StatusButton><StatusButton id={a.id} data={data} status="NAO_COMPARECEU">Faltou</StatusButton><StatusButton id={a.id} data={data} status="CANCELADO" danger>Cancelar</StatusButton></div>}</article> }
+
 function Campo({ label, name, type='text', required=false }: { label: string; name: string; type?: string; required?: boolean }) { return <div className="field"><label>{label}</label><input className="input" name={name} type={type} required={required}/></div> }
-function StatusButton({ id, data, status, children }: { id:string; data:string; status:string; children:React.ReactNode }) { return <form action={alterarStatusAgendamento}><input type="hidden" name="id" value={id}/><input type="hidden" name="data" value={data}/><input type="hidden" name="status" value={status}/><button className="btn">{children}</button></form> }
+function StatusButton({ id, data, status, children, primary=false, danger=false }: { id:string; data:string; status:string; children:React.ReactNode; primary?:boolean; danger?:boolean }) { return <form action={alterarStatusAgendamento}><input type="hidden" name="id" value={id}/><input type="hidden" name="data" value={data}/><input type="hidden" name="status" value={status}/><button className={`btn ${primary?'btn-primary':''} ${danger?'btn-danger':''}`}>{children}</button></form> }
 function Status({ status }: { status:string }) { const map:Record<string,[string,string]>={CONFIRMADO:['Confirmado','badge-blue'],CONCLUIDO:['Concluído','badge-green'],CANCELADO:['Cancelado','badge-gray'],NAO_COMPARECEU:['Não compareceu','badge-red']}; const item=map[status]||[status,'badge-gray']; return <span className={`badge ${item[1]}`}>{item[0]}</span> }
 function mensagemErro(erro:string) { const m:Record<string,string>={dados:'Preencha os dados obrigatórios.',ocupado:'Este horário já está ocupado.',bloqueado:'Este horário está bloqueado.',expediente:'O horário está fora do expediente.',antecedencia:'O horário está dentro da antecedência mínima configurada.',bloqueio:'Período de bloqueio inválido.',bloqueio_conflito:'Existe um atendimento neste período.',abertura:'Horário especial inválido.',cliente:'Os dados não correspondem ao cliente selecionado.',status:'Status inválido.',banco:'Não foi possível concluir a operação.'}; return m[erro]||'Ocorreu um erro.' }
