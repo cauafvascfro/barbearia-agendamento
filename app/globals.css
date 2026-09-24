@@ -81,6 +81,14 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .appointment-cancelado { opacity: .72; }
 .empty-state { text-align: center; padding: 36px 22px; }
 .empty-state strong { display: block; font-size: 18px; margin-bottom: 6px; }
+.agenda-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filter-chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 8px 12px; font-size: 13px; font-weight: 700; }
+.filter-chip span { min-width: 22px; text-align: center; background: #f4f4f5; border-radius: 999px; padding: 2px 6px; color: var(--muted); }
+.filter-chip:hover { background: #fafafa; }
+.filter-chip.active { background: var(--dark); border-color: var(--dark); color: #fff; }
+.filter-chip.active span { background: #27272a; color: #e4e4e7; }
+.appointment-client-link { display: inline-block; margin-top: 8px; font-weight: 700; color: #3f3f46; }
+.appointment-client-link:hover { text-decoration: underline; }
 .login-card { width: min(440px, 100%); background: #18181b; color: #fff; border: 1px solid #3f3f46; border-radius: 20px; padding: 30px; }
 .login-card .input { background: #09090b; color: #fff; border-color: #3f3f46; }
 .login-card .muted { color: #a1a1aa; }
