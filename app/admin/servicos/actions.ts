@@ -6,7 +6,16 @@ import { requireAdmin } from '@/lib/auth/require-admin'
 import { registrarAuditoria } from '@/lib/auditoria'
 
 function converterPreco(valor: string) {
-  return Number(valor.replace(/\./g, '').replace(',', '.'))
+  const limpo = valor.trim().replace(/\s/g, '')
+  if (!limpo) return Number.NaN
+  const normalizado = limpo.includes(',')
+    ? limpo.replace(/\./g, '').replace(',', '.')
+    : limpo
+  return Number(normalizado)
+}
+
+function duracaoValida(duracao: number) {
+  return Number.isInteger(duracao) && duracao >= 5 && duracao <= 480 && duracao % 5 === 0
 }
 
 export async function criarServico(formData: FormData) {
@@ -16,7 +25,7 @@ export async function criarServico(formData: FormData) {
   const preco = converterPreco(String(formData.get('preco') || ''))
   const duracao = Number(formData.get('duracao_minutos'))
 
-  if (!nome || Number.isNaN(preco) || preco < 0 || !Number.isInteger(duracao) || duracao <= 0) {
+  if (!nome || Number.isNaN(preco) || preco < 0 || !duracaoValida(duracao)) {
     redirect('/admin/servicos?erro=dados')
   }
 
@@ -30,6 +39,7 @@ export async function criarServico(formData: FormData) {
   if (error) redirect('/admin/servicos?erro=banco')
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'SERVICO_CRIADO', entidade: 'SERVICO', entidadeId: data.id })
   revalidatePath('/admin/servicos')
+  revalidatePath('/agendar')
   redirect('/admin/servicos?sucesso=criado')
 }
 
@@ -43,6 +53,7 @@ export async function alterarStatusServico(formData: FormData) {
   if (error) redirect('/admin/servicos?erro=banco')
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: !ativo ? 'SERVICO_ATIVADO' : 'SERVICO_DESATIVADO', entidade: 'SERVICO', entidadeId: id })
   revalidatePath('/admin/servicos')
+  revalidatePath('/agendar')
 }
 
 export async function editarServico(id: string, formData: FormData) {
@@ -52,7 +63,7 @@ export async function editarServico(id: string, formData: FormData) {
   const preco = converterPreco(String(formData.get('preco') || ''))
   const duracao = Number(formData.get('duracao_minutos'))
 
-  if (!nome || Number.isNaN(preco) || preco < 0 || !Number.isInteger(duracao) || duracao <= 0) {
+  if (!nome || Number.isNaN(preco) || preco < 0 || !duracaoValida(duracao)) {
     redirect(`/admin/servicos/${id}/editar?erro=dados`)
   }
 
@@ -66,5 +77,6 @@ export async function editarServico(id: string, formData: FormData) {
 
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'SERVICO_EDITADO', entidade: 'SERVICO', entidadeId: id })
   revalidatePath('/admin/servicos')
+  revalidatePath('/agendar')
   redirect('/admin/servicos?sucesso=editado')
 }
