@@ -38,7 +38,7 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
           <div className="field"><label>Agenda aberta por (dias)</label><input className="input" type="number" min="1" name="antecedencia_maxima_dias" defaultValue={config.antecedencia_maxima_dias} /></div>
           <div className="field"><label>Prazo mínimo para cancelar/remarcar (h)</label><input className="input" type="number" min="0" name="cancelamento_minimo_horas" defaultValue={config.cancelamento_minimo_horas} /></div>
           <input type="hidden" name="lembrete_horas_antes" value={config.lembrete_horas_antes} />
-          <input type="hidden" name="whatsapp_ativo" value={config.whatsapp_ativo ? 'on' : ''} />
+          <input type="hidden" name="whatsapp_ativo" value="off" />
         </div>
         <button className="btn btn-primary">Salvar configurações</button>
       </form>
