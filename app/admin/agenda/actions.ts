@@ -38,18 +38,20 @@ export async function alterarStatusAgendamento(formData: FormData) {
 export async function criarAgendamentoManual(formData: FormData) {
   const { supabase, claims } = await requireAdmin()
   const servicoId = String(formData.get('servico_id') || '')
-  const nome = String(formData.get('nome') || '').trim()
-  const telefone = String(formData.get('telefone') || '').trim()
+  let nome = String(formData.get('nome') || '').trim()
+  let telefone = String(formData.get('telefone') || '').trim()
   const clienteId = String(formData.get('cliente_id') || '').trim()
   const data = String(formData.get('data') || '')
   const hora = String(formData.get('hora') || '')
   const observacoes = String(formData.get('observacoes') || '').trim()
-  if (!servicoId || !nome || !telefone || !data || !hora) redirect(`/admin/agenda?data=${data}&erro=dados`)
+  if (!servicoId || !data || !hora || (!clienteId && (!nome || !telefone))) redirect(`/admin/agenda?data=${data}&erro=dados`)
 
   const admin = createAdminClient()
   if (clienteId) {
     const { data: cliente } = await admin.from('clientes').select('id,nome,telefone').eq('id', clienteId).eq('ativo', true).maybeSingle()
-    if (!cliente || cliente.nome !== nome || cliente.telefone !== telefone) redirect(`/admin/agenda?data=${data}&erro=cliente`)
+    if (!cliente) redirect(`/admin/agenda?data=${data}&erro=cliente`)
+    nome = cliente.nome
+    telefone = cliente.telefone
   }
   const { data: config } = await admin.from('configuracoes').select('timezone').limit(1).single()
   const timezone = config?.timezone || 'America/Bahia'
