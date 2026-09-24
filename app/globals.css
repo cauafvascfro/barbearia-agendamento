@@ -72,6 +72,15 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .table-row:first-child { border-top: 0; }
 .appointment { display: grid; grid-template-columns: 90px minmax(0, 1fr) auto; gap: 18px; align-items: start; }
 .appointment-time { font-size: 22px; font-weight: 800; }
+.agenda-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.appointment { position: relative; overflow: hidden; }
+.appointment::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: #3b82f6; }
+.appointment-concluido::before { background: #22c55e; }
+.appointment-cancelado::before { background: #a1a1aa; }
+.appointment-nao_compareceu::before { background: #ef4444; }
+.appointment-cancelado { opacity: .72; }
+.empty-state { text-align: center; padding: 36px 22px; }
+.empty-state strong { display: block; font-size: 18px; margin-bottom: 6px; }
 .login-card { width: min(440px, 100%); background: #18181b; color: #fff; border: 1px solid #3f3f46; border-radius: 20px; padding: 30px; }
 .login-card .input { background: #09090b; color: #fff; border-color: #3f3f46; }
 .login-card .muted { color: #a1a1aa; }
@@ -80,10 +89,10 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .sidebar { position: static; }
   .nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .admin-main { padding: 24px 16px; }
-  .admin-grid, .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-grid, .grid-4, .agenda-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 620px) {
-  .grid-2, .grid-4, .admin-grid { grid-template-columns: 1fr; }
+  .grid-2, .grid-4, .admin-grid, .agenda-summary { grid-template-columns: 1fr; }
   .times { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .split { align-items: flex-start; flex-direction: column; }
   .appointment { grid-template-columns: 1fr; }
