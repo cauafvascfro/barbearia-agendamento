@@ -1,4 +1,4 @@
-import Link from 'next/link'
+import { AdminNav } from '@/components/admin/admin-nav'
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { logout } from './actions'
 
@@ -10,13 +10,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="admin-shell">
       <aside className="sidebar">
         <div className="sidebar-brand"><small>Gestão</small><strong>Barbearia</strong></div>
-        <nav className="nav">
-          <Link href="/admin">Dashboard</Link>
-          <Link href="/admin/agenda">Agenda</Link>
-          <Link href="/admin/clientes">Clientes</Link>
-          <Link href="/admin/servicos">Serviços</Link>
-          <Link href="/admin/configuracoes">Configurações</Link>
-        </nav>
+        <AdminNav/>
         <form action={logout}><button type="submit">Sair</button></form>
       </aside>
       <main className="admin-main">{children}</main>
