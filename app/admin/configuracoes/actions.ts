@@ -20,7 +20,7 @@ export async function salvarConfiguracoes(formData: FormData) {
   const antecedenciaMinima = Number(formData.get('antecedencia_minima_minutos'))
   const antecedenciaMaxima = Number(formData.get('antecedencia_maxima_dias'))
   const cancelamento = Number(formData.get('cancelamento_minimo_horas'))
-  const whatsappAtivo = formData.get('whatsapp_ativo') === 'on'
+  const whatsappAtivo = false
   const lembreteHoras = Number(formData.get('lembrete_horas_antes'))
 
   if (!nome || !Number.isInteger(intervalo) || intervalo < 5 || intervalo > 240 || !Number.isInteger(antecedenciaMinima) || antecedenciaMinima < 0 || !Number.isInteger(antecedenciaMaxima) || antecedenciaMaxima < 1 || antecedenciaMaxima > 365 || !Number.isInteger(cancelamento) || cancelamento < 0 || !Number.isInteger(lembreteHoras) || lembreteHoras < 1 || lembreteHoras > 168) {
