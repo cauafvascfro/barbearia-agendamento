@@ -50,8 +50,8 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Start local Supabase
-        run: supabase start
+      - name: Start minimal local Supabase
+        run: supabase start -x realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor
 
       - name: Apply migrations and development seed
         run: supabase db reset
