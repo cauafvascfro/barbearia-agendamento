@@ -3,7 +3,7 @@ import { DateTime } from 'luxon'
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { formatarMoeda, formatarTelefone } from '@/lib/formatters'
 import { AgendamentoManualForm } from '@/components/admin/agendamento-manual-form'
-import { alterarStatusAgendamento, criarAgendamentoManual, criarBloqueio, removerBloqueio, criarAberturaExtra, removerAberturaExtra, remarcarAgendamentoAdmin } from './actions'
+import { alterarStatusAgendamento, criarAgendamentoManual, criarBloqueio, removerBloqueio, criarAberturaExtra, removerAberturaExtra, remarcarAgendamentoAdmin, bloquearDiaInteiro } from './actions'
 
 export const dynamic = 'force-dynamic'
 type Props = { searchParams: Promise<{ data?: string; erro?: string; sucesso?: string; status?: string; cliente?: string }> }
@@ -86,6 +86,7 @@ export default async function AgendaPage({ searchParams }: Props) {
         <aside className="stack">
           <AgendamentoManualForm data={dataSelecionada} servicos={servicos || []} clientes={clientes || []} clienteInicial={params.cliente || ''} action={criarAgendamentoManual}/>
           <form action={criarAberturaExtra} className="card stack"><h2>Abrir horário especial</h2><p className="muted small">Use para domingos, feriados ou qualquer data fora do expediente semanal.</p><input type="hidden" name="data" value={dataSelecionada}/><Campo label="Início" name="hora_inicio" type="time" required/><Campo label="Fim" name="hora_fim" type="time" required/><Campo label="Motivo" name="motivo"/><button className="btn btn-primary">Abrir nesta data</button></form>
+          <form action={bloquearDiaInteiro} className="card stack"><h2>Fechar o dia inteiro</h2><p className="muted small">Use para folga, feriado ou indisponibilidade. O bloqueio só é criado se não houver atendimento confirmado nesta data.</p><input type="hidden" name="data" value={dataSelecionada}/><Campo label="Motivo" name="motivo"/><button className="btn btn-danger">Bloquear dia inteiro</button></form>
           <form action={criarBloqueio} className="card stack"><h2>Bloquear horário</h2><input type="hidden" name="data" value={dataSelecionada}/><Campo label="Início" name="hora_inicio" type="time" required/><Campo label="Fim" name="hora_fim" type="time" required/><Campo label="Motivo" name="motivo"/><button className="btn">Bloquear</button></form>
         </aside>
       </div>
