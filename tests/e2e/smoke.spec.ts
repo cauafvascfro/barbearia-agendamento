@@ -66,3 +66,18 @@ test('cliente agenda e cancela um horário pelo link seguro', async ({ page }) =
   await expect(page.getByRole('heading', { name: 'Agendamento cancelado' })).toBeVisible({ timeout: 15_000 })
   await expect(page.getByText('Cancelado', { exact: true })).toBeVisible()
 })
+
+test('API pública rejeita parâmetros inválidos de disponibilidade', async ({ request }) => {
+  const resposta = await request.get('/api/disponibilidade?servico=invalido&data=2026-99-99')
+  expect(resposta.status()).toBe(400)
+  expect(resposta.headers()['cache-control']).toContain('no-store')
+})
+
+test('API de agendamento exige JSON', async ({ request }) => {
+  const resposta = await request.post('/api/agendamentos', {
+    data: 'conteudo-invalido',
+    headers: { 'content-type': 'text/plain' },
+  })
+  expect(resposta.status()).toBe(415)
+  expect(resposta.headers()['x-content-type-options']).toBe('nosniff')
+})
