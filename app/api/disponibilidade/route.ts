@@ -9,7 +9,7 @@ export async function GET(request:NextRequest){
  const servicoId=request.nextUrl.searchParams.get('servico');const data=request.nextUrl.searchParams.get('data')
  if(!servicoId||!data||!UUID.test(servicoId)||!DATA.test(data))return NextResponse.json({erro:'Serviço ou data inválidos.'},{status:400,headers})
  const parsed=new Date(data+'T00:00:00Z');if(Number.isNaN(parsed.getTime())||parsed.toISOString().slice(0,10)!==data)return NextResponse.json({erro:'Data inválida.'},{status:400,headers})
- const supabase=createAdminClient();const {data:servico}=await supabase.from('servicos').select('id,duracao_minutos').eq('id',servicoId).eq('ativo',true).single()
+ const supabase=createAdminClient();const {data:config}=await supabase.from('configuracoes').select('agenda_publica_ativa').limit(1).single();if(config?.agenda_publica_ativa===false)return NextResponse.json({horarios:[]},{headers});const {data:servico}=await supabase.from('servicos').select('id,duracao_minutos').eq('id',servicoId).eq('ativo',true).single()
  if(!servico)return NextResponse.json({erro:'Serviço indisponível.'},{status:404,headers})
  try{return NextResponse.json({horarios:await calcularDisponibilidade({data,duracaoMinutos:servico.duracao_minutos})},{headers})}catch{return NextResponse.json({erro:'Não foi possível consultar a disponibilidade.'},{status:500,headers})}
 }
