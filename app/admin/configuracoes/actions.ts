@@ -22,6 +22,7 @@ export async function salvarConfiguracoes(formData: FormData) {
   const cancelamento = Number(formData.get('cancelamento_minimo_horas'))
   const whatsappAtivo = false
   const lembreteHoras = Number(formData.get('lembrete_horas_antes'))
+  const agendaPublicaAtiva = formData.get('agenda_publica_ativa') === 'on'
 
   if (!nome || !Number.isInteger(intervalo) || intervalo < 5 || intervalo > 240 || !Number.isInteger(antecedenciaMinima) || antecedenciaMinima < 0 || !Number.isInteger(antecedenciaMaxima) || antecedenciaMaxima < 1 || antecedenciaMaxima > 365 || !Number.isInteger(cancelamento) || cancelamento < 0 || !Number.isInteger(lembreteHoras) || lembreteHoras < 1 || lembreteHoras > 168) {
     redirect('/admin/configuracoes?erro=dados')
@@ -41,6 +42,7 @@ export async function salvarConfiguracoes(formData: FormData) {
     cancelamento_minimo_horas: cancelamento,
     whatsapp_ativo: whatsappAtivo,
     lembrete_horas_antes: lembreteHoras,
+    agenda_publica_ativa: agendaPublicaAtiva,
   }).eq('id', config.id)
 
   if (error) redirect('/admin/configuracoes?erro=banco')
