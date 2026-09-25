@@ -69,4 +69,4 @@ function Periodo({ chave, numero, inicio, fim }: { chave: string; numero: number
   return <div className="grid-2"><div className="field"><label>Início {numero}</label><input className="input" type="time" name={`${chave}_${numero}_inicio`} defaultValue={inicio?.slice(0, 5) || ''} /></div><div className="field"><label>Fim {numero}</label><input className="input" type="time" name={`${chave}_${numero}_fim`} defaultValue={fim?.slice(0, 5) || ''} /></div></div>
 }
 
-function SetupItem({ok,titulo,detalhe}:{ok:boolean;titulo:string;detalhe:string}) { return <div className="setup-item"><span className={`setup-dot ${ok?'done':''}`}>{ok?'✓':'!'}</span><div><strong>{titulo}</strong><p className="muted small">{ok?'Configurado':detalhe}</p></div></div> }
+function SetupItem({ok,titulo,detalhe}:{ok:boolean;titulo:string;detalhe:string}) { return <div className="setup-item"><span className={`setup-dot ${ok?'done':''}`}>{ok?'✓':'!'}</span><div><strong>{titulo}</strong><p className="muted small">{ok?'Configurado':detalhe}</p>{!ok&&titulo==='Serviços'&&<a className="small" href="/admin/servicos">Configurar serviços →</a>}</div></div> }
