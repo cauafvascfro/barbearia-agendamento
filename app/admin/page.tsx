@@ -22,7 +22,7 @@ export default async function DashboardPage() {
   const concluidos=(hoje||[]).filter((a)=>a.status==='CONCLUIDO'); const confirmados=(hoje||[]).filter((a)=>a.status==='CONFIRMADO')
   const faturamentoHoje=concluidos.reduce((n,a)=>n+Number(a.preco),0); const concluidosMes=(mes||[]).filter((a)=>a.status==='CONCLUIDO'); const faturamentoMes=concluidosMes.reduce((n,a)=>n+Number(a.preco),0); const ticketMedio=concluidosMes.length?faturamentoMes/concluidosMes.length:0; const canceladosMes=(mes||[]).filter((a)=>a.status==='CANCELADO').length; const faltasMes=(mes||[]).filter((a)=>a.status==='NAO_COMPARECEU').length
   const proximo=confirmados.find((a)=>DateTime.fromISO(a.inicio).setZone(timezone)>=agora)
-  const instalacaoPronta=Boolean(config?.nome_barbearia?.trim()&&config?.telefone?.trim()&&(servicosAtivos||0)>0&&((horariosAtivos||0)>0||(aberturasFuturas||0)>0)
+  const instalacaoPronta=Boolean(config?.nome_barbearia?.trim()&&config?.telefone?.trim()&&(servicosAtivos||0)>0&&((horariosAtivos||0)>0||(aberturasFuturas||0)>0))
   const taxaConclusaoMes=(concluidosMes.length+canceladosMes+faltasMes)>0?Math.round((concluidosMes.length/(concluidosMes.length+canceladosMes+faltasMes))*100):0
 
   return <div className="stack-lg">
