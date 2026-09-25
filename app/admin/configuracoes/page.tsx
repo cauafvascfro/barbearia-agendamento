@@ -20,11 +20,16 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
   if (!config) return <div className="notice notice-error">Execute as migrations/seed antes de configurar o sistema.</div>
 
   const periodos = (dia: number) => (horarios || []).filter((h) => h.dia_semana === dia)
+  const identidadeOk=Boolean(config.nome_barbearia?.trim())
+  const contatoOk=Boolean(config.telefone?.trim()||config.endereco?.trim())
+  const expedienteOk=Boolean((horarios||[]).length)
+  const prontidao=[identidadeOk,contatoOk,expedienteOk].filter(Boolean).length
   return (
     <div className="stack-lg">
       <header><p className="eyebrow">Administração</p><h1 className="page-title">Configurações</h1><p className="muted">Personalize a barbearia sem precisar alterar o código.</p></header>
       {params.sucesso && <div className="notice notice-success">Configurações salvas.</div>}
       {params.erro && <div className="notice notice-error">Revise os dados informados.</div>}
+      <section className="card stack"><div className="split"><div><p className="eyebrow">Implantação</p><h2>Checklist da instalação</h2></div><span className="badge badge-green">{prontidao}/3 concluídos</span></div><div className="setup-checklist"><SetupItem ok={identidadeOk} titulo="Identidade" detalhe="Defina o nome comercial da barbearia."/><SetupItem ok={contatoOk} titulo="Contato" detalhe="Informe telefone ou endereço para referência do cliente."/><SetupItem ok={expedienteOk} titulo="Expediente" detalhe="Cadastre ao menos um período semanal de atendimento."/></div></section>
 
       <form action={salvarConfiguracoes} className="card stack-lg">
         <div><h2>Identidade e contato</h2><p className="muted small">O nome e o telefone salvos aqui também são usados na área pública do agendamento.</p></div>
@@ -60,3 +65,5 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
 function Periodo({ chave, numero, inicio, fim }: { chave: string; numero: number; inicio?: string; fim?: string }) {
   return <div className="grid-2"><div className="field"><label>Início {numero}</label><input className="input" type="time" name={`${chave}_${numero}_inicio`} defaultValue={inicio?.slice(0, 5) || ''} /></div><div className="field"><label>Fim {numero}</label><input className="input" type="time" name={`${chave}_${numero}_fim`} defaultValue={fim?.slice(0, 5) || ''} /></div></div>
 }
+
+function SetupItem({ok,titulo,detalhe}:{ok:boolean;titulo:string;detalhe:string}) { return <div className="setup-item"><span className={`setup-dot ${ok?'done':''}`}>{ok?'✓':'!'}</span><div><strong>{titulo}</strong><p className="muted small">{ok?'Configurado':detalhe}</p></div></div> }
