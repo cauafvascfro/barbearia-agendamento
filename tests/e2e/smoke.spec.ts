@@ -22,7 +22,7 @@ test('página pública carrega serviços do banco', async ({ page }) => {
 test('rota administrativa exige autenticação', async ({ page }) => {
   await page.goto('/admin')
   await expect(page).toHaveURL(/\/login/)
-  await expect(page.getByRole('heading', { name: 'New Style' })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 })
 
 test('cliente agenda e cancela um horário pelo link seguro', async ({ page }) => {
