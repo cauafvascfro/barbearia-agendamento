@@ -1,7 +1,8 @@
 # Ambientes
 
 ## Desenvolvimento local
-Use o Supabase local via CLI e `.env.local`.
+
+Use o Supabase local via CLI e um arquivo `.env.local`.
 
 ```bash
 supabase start
@@ -10,23 +11,28 @@ npm run dev
 ```
 
 ## Preview / staging
-Recomendado para validar migrations e a aplicação antes da produção. Use um projeto Supabase separado quando possível. No Vercel, configure valores no escopo **Preview**.
+
+Use Preview para validar migrations e a aplicação antes da produção. Quando possível, mantenha um projeto Supabase separado do banco de produção e configure as variáveis no escopo **Preview** da Vercel.
 
 ## Produção
-Use outro projeto Supabase e as variáveis de escopo **Production** do Vercel. Não compartilhe `SUPABASE_SECRET_KEY`, `CRON_SECRET`, `RATE_LIMIT_SALT` ou credenciais do WhatsApp entre ambientes.
 
-## Variáveis
+Cada instalação comercial deve possuir seu próprio projeto Supabase e sua configuração de produção na Vercel. Não compartilhe chaves privadas ou salts entre clientes.
 
-| Variável | Browser? | Ambiente |
+## Variáveis necessárias
+
+| Variável | Browser? | Finalidade |
 |---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | Sim | todos |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Sim | todos |
-| `SUPABASE_SECRET_KEY` | Não | servidor |
-| `RATE_LIMIT_SALT` | Não | servidor |
-| `CRON_SECRET` | Não | servidor |
-| `APP_URL` | Não | todos |
-| `WHATSAPP_ACCESS_TOKEN` | Não | produção/staging |
-| `WHATSAPP_PHONE_NUMBER_ID` | Não | produção/staging |
-| `WHATSAPP_GRAPH_API_VERSION` | Não | produção/staging |
+| `NEXT_PUBLIC_SUPABASE_URL` | Sim | URL do projeto Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Sim | Chave pública do Supabase |
+| `SUPABASE_SECRET_KEY` | Não | Operações exclusivas do servidor |
+| `RATE_LIMIT_SALT` | Não | Proteção do rate limit |
+| `CRON_SECRET` | Não | Reserva para rotinas internas protegidas |
+| `APP_URL` | Não | URL pública da instalação |
 
-No Vercel, alterações em variáveis exigem um novo deploy para serem refletidas de forma consistente, especialmente as `NEXT_PUBLIC_*`, que entram no bundle durante o build.
+Nunca exponha `SUPABASE_SECRET_KEY`, `RATE_LIMIT_SALT` ou `CRON_SECRET` no navegador ou com prefixo `NEXT_PUBLIC_`.
+
+Alterações nas variáveis da Vercel devem ser seguidas por um novo deploy, especialmente quando afetarem variáveis públicas utilizadas durante o build.
+
+## Regra para novas barbearias
+
+A arquitetura atual usa **uma instalação por barbearia**. Para um novo cliente, crie recursos separados de produção em vez de reutilizar o banco de outra barbearia. Isso evita mistura de clientes, agendas e dados administrativos.
