@@ -108,6 +108,7 @@ export async function criarBloqueio(formData: FormData) {
   if (error) redirect(`/admin/agenda?data=${data}&erro=banco`)
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'BLOQUEIO_CRIADO', entidade: 'BLOQUEIO', entidadeId: criado.id })
   revalidatePath('/admin/agenda')
+  revalidatePath('/agendar')
   redirect(`/admin/agenda?data=${data}&sucesso=bloqueio`)
 }
 
@@ -119,6 +120,7 @@ export async function removerBloqueio(formData: FormData) {
   await supabase.from('bloqueios_agenda').delete().eq('id', id)
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'BLOQUEIO_REMOVIDO', entidade: 'BLOQUEIO', entidadeId: id })
   revalidatePath('/admin/agenda')
+  revalidatePath('/agendar')
   redirect(`/admin/agenda?data=${data}&sucesso=bloqueio_removido`)
 }
 
@@ -137,6 +139,7 @@ export async function criarAberturaExtra(formData: FormData) {
 
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'ABERTURA_EXTRA_CRIADA', entidade: 'ABERTURA_EXTRA', entidadeId: criado.id })
   revalidatePath('/admin/agenda')
+  revalidatePath('/agendar')
   redirect(`/admin/agenda?data=${data}&sucesso=abertura`)
 }
 
@@ -148,6 +151,7 @@ export async function removerAberturaExtra(formData: FormData) {
   await supabase.from('aberturas_extras').delete().eq('id', id)
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'ABERTURA_EXTRA_REMOVIDA', entidade: 'ABERTURA_EXTRA', entidadeId: id })
   revalidatePath('/admin/agenda')
+  revalidatePath('/agendar')
   redirect(`/admin/agenda?data=${data}&sucesso=abertura_removida`)
 }
 
@@ -183,7 +187,7 @@ export async function bloquearDiaInteiro(formData: FormData) {
   const inicio=DateTime.fromISO(data,{zone:timezone}).startOf('day')
   const fim=inicio.plus({days:1})
   if(!data||!inicio.isValid) redirect(`/admin/agenda?data=${data}&erro=bloqueio`)
-  const {data:conflitos}=await supabase.from('agendamentos').select('id').eq('status','CONFIRMADO').lt('inicio',fim.toUTC().toISO()).gt('fim',inicio.toUTC().toISO()).limit(1)
+  const {data:conflitos}=await supabase.from('agendamentos').select('id').not('status','in','(CANCELADO,CONCLUIDO,NAO_COMPARECEU)').lt('inicio',fim.toUTC().toISO()).gt('fim',inicio.toUTC().toISO()).limit(1)
   if(conflitos?.length) redirect(`/admin/agenda?data=${data}&erro=bloqueio_conflito`)
   const {data:criado,error}=await supabase.from('bloqueios_agenda').insert({inicio:inicio.toUTC().toISO(),fim:fim.toUTC().toISO(),motivo:motivo||'Dia indisponível'}).select('id').single()
   if(error) redirect(`/admin/agenda?data=${data}&erro=banco`)
