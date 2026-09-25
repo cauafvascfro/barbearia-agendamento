@@ -15,17 +15,14 @@ export async function salvarConfiguracoes(formData: FormData) {
   const nome = String(formData.get('nome_barbearia') || '').trim()
   const telefone = String(formData.get('telefone') || '').trim()
   const telefoneDigitos = telefone.replace(/\D/g, '')
-  const whatsapp = String(formData.get('whatsapp') || '').trim()
-  const endereco = String(formData.get('endereco') || '').trim()
+     const endereco = String(formData.get('endereco') || '').trim()
   const intervalo = Number(formData.get('intervalo_agendamento'))
   const antecedenciaMinima = Number(formData.get('antecedencia_minima_minutos'))
   const antecedenciaMaxima = Number(formData.get('antecedencia_maxima_dias'))
   const cancelamento = Number(formData.get('cancelamento_minimo_horas'))
-  const whatsappAtivo = false
-  const lembreteHoras = Number(formData.get('lembrete_horas_antes'))
-  const agendaPublicaAtiva = formData.get('agenda_publica_ativa') === 'on'
+   const agendaPublicaAtiva = formData.get('agenda_publica_ativa') === 'on'
 
-  if (!nome || nome.length > 120 || (!telefone || telefoneDigitos.length < 10 || telefoneDigitos.length > 13) || endereco.length > 240 || !Number.isInteger(intervalo) || intervalo < 5 || intervalo > 240 || !Number.isInteger(antecedenciaMinima) || antecedenciaMinima < 0 || !Number.isInteger(antecedenciaMaxima) || antecedenciaMaxima < 1 || antecedenciaMaxima > 365 || !Number.isInteger(cancelamento) || cancelamento < 0 || !Number.isInteger(lembreteHoras) || lembreteHoras < 1 || lembreteHoras > 168) {
+  if (!nome || nome.length > 120 || (!telefone || telefoneDigitos.length < 10 || telefoneDigitos.length > 13) || endereco.length > 240 || !Number.isInteger(intervalo) || intervalo < 5 || intervalo > 240 || !Number.isInteger(antecedenciaMinima) || antecedenciaMinima < 0 || !Number.isInteger(antecedenciaMaxima) || antecedenciaMaxima < 1 || antecedenciaMaxima > 365 || !Number.isInteger(cancelamento) || cancelamento < 0 ) {
     redirect('/admin/configuracoes?erro=dados')
   }
 
@@ -35,14 +32,13 @@ export async function salvarConfiguracoes(formData: FormData) {
   const { error } = await supabase.from('configuracoes').update({
     nome_barbearia: nome,
     telefone: telefone || null,
-    whatsapp: whatsapp || null,
+    whatsapp: null,
     endereco: endereco || null,
     intervalo_agendamento: intervalo,
     antecedencia_minima_minutos: antecedenciaMinima,
     antecedencia_maxima_dias: antecedenciaMaxima,
     cancelamento_minimo_horas: cancelamento,
-    whatsapp_ativo: whatsappAtivo,
-    lembrete_horas_antes: lembreteHoras,
+    whatsapp_ativo: false,
     agenda_publica_ativa: agendaPublicaAtiva,
   }).eq('id', config.id)
 
