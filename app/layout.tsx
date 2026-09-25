@@ -2,9 +2,9 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: { default: 'New Style Barbearia', template: '%s | New Style Barbearia' },
-  description: 'Agendamento online da New Style Barbearia. Escolha seu serviço, data e horário.',
-  applicationName: 'New Style Barbearia',
+  title: { default: 'Agendamento online', template: '%s | Agendamento online' },
+  description: 'Agendamento online de serviços. Escolha o serviço, a data e o horário.',
+  applicationName: 'Agendamento online',
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
