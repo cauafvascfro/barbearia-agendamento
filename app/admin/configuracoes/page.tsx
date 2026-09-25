@@ -36,6 +36,7 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
 
       <form action={salvarConfiguracoes} className="card stack-lg">
         <div><h2>Identidade e contato</h2><p className="muted small">O nome e o telefone salvos aqui também são usados na área pública do agendamento.</p></div>
+        <div className="card-soft split"><div><strong>Agenda pública</strong><p className="muted small">Permite pausar novos agendamentos sem apagar serviços ou horários.</p></div><label className="wrap"><input type="checkbox" name="agenda_publica_ativa" defaultChecked={config.agenda_publica_ativa !== false} /> Aceitar agendamentos online</label></div>
         <div className="grid-2">
           <div className="field"><label>Nome da barbearia</label><input className="input" name="nome_barbearia" required defaultValue={config.nome_barbearia} /></div>
           <div className="field"><label>Telefone</label><input className="input" name="telefone" defaultValue={config.telefone || ''} /></div>
