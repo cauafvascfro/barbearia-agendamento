@@ -6,13 +6,15 @@ export const dynamic = 'force-dynamic'
 
 export default async function AgendarPage() {
   const supabase = createAdminClient()
-  const [{ data: servicos }, { data: config }, { count: horariosAtivos }] = await Promise.all([
+  const [{ data: servicos }, { data: config }, { count: horariosAtivos }, { count: aberturasFuturas }] = await Promise.all([
     supabase.from('servicos').select('id,nome,descricao,preco,duracao_minutos').eq('ativo', true).order('nome'),
     supabase.from('configuracoes').select('*').limit(1).single(),
     supabase.from('horarios_funcionamento').select('id',{count:'exact',head:true}).eq('ativo',true),
+    supabase.from('aberturas_extras').select('id',{count:'exact',head:true}).gte('data',new Date().toISOString().slice(0,10)),
   ])
   if (!config) return <main className="public-shell"><div className="container"><div className="notice notice-error">Sistema ainda não configurado.</div></div></main>
-  const pronta=Boolean(config.nome_barbearia?.trim()&&(servicos||[]).length&&(horariosAtivos||0)>0)
+  const possuiExpediente=Boolean((horariosAtivos||0)>0||(aberturasFuturas||0)>0)
+  const pronta=Boolean(config.nome_barbearia?.trim()&&(servicos||[]).length&&possuiExpediente)
   if(config.agenda_publica_ativa===false) return <main className="public-shell"><div className="container booking-container"><section className="card empty-state"><strong>Agendamento online temporariamente pausado</strong><p className="muted">A barbearia não está recebendo novos agendamentos online neste momento.</p></section></div></main>
   if(!pronta) return <main className="public-shell"><div className="container booking-container"><section className="card empty-state"><strong>Agendamento online em preparação</strong><p className="muted">A barbearia ainda está finalizando a configuração da agenda. Tente novamente mais tarde.</p></section></div></main>
   const timezone = config.timezone || 'America/Bahia'
