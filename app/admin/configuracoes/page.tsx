@@ -26,13 +26,14 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
   const expedienteOk=Boolean((horarios||[]).length)
   const servicosOk=Boolean(servicosAtivos&&servicosAtivos>0)
   const regrasOk=Boolean(config.intervalo_agendamento>=5&&config.antecedencia_maxima_dias>=1)
+  const publicada=config.agenda_publica_ativa!==false
   const prontidao=[identidadeOk,contatoOk,servicosOk,expedienteOk,regrasOk].filter(Boolean).length
   return (
     <div className="stack-lg">
       <header><p className="eyebrow">Administração</p><h1 className="page-title">Configurações</h1><p className="muted">Personalize a barbearia sem precisar alterar o código.</p></header>
       {params.sucesso && <div className="notice notice-success">Configurações salvas.</div>}
       {params.erro && <div className="notice notice-error">Revise os dados informados.</div>}
-      <section className="card stack"><div className="split"><div><p className="eyebrow">Implantação</p><h2>Checklist da instalação</h2></div><span className="badge badge-green">{prontidao}/5 concluídos</span></div><div className="setup-checklist"><SetupItem ok={identidadeOk} titulo="Identidade" detalhe="Defina o nome comercial da barbearia."/><SetupItem ok={contatoOk} titulo="Contato" detalhe="Informe telefone ou endereço para referência do cliente."/><SetupItem ok={servicosOk} titulo="Serviços" detalhe="Cadastre ao menos um serviço ativo para liberar o agendamento."/><SetupItem ok={expedienteOk} titulo="Expediente" detalhe="Cadastre ao menos um período semanal de atendimento."/><SetupItem ok={regrasOk} titulo="Regras da agenda" detalhe="Revise intervalo, antecedência e prazo para cancelamento."/></div></section>
+      <section className="card stack"><div className="split"><div><p className="eyebrow">Implantação</p><h2>Checklist da instalação</h2></div><div className="wrap"><span className={`badge ${publicada?'badge-green':'badge-gray'}`}>{publicada?'Agenda online':'Agenda pausada'}</span><span className="badge badge-green">{prontidao}/5 concluídos</span></div></div><div className="setup-checklist"><SetupItem ok={identidadeOk} titulo="Identidade" detalhe="Defina o nome comercial da barbearia."/><SetupItem ok={contatoOk} titulo="Contato" detalhe="Informe telefone ou endereço para referência do cliente."/><SetupItem ok={servicosOk} titulo="Serviços" detalhe="Cadastre ao menos um serviço ativo para liberar o agendamento."/><SetupItem ok={expedienteOk} titulo="Expediente" detalhe="Cadastre ao menos um período semanal de atendimento."/><SetupItem ok={regrasOk} titulo="Regras da agenda" detalhe="Revise intervalo, antecedência e prazo para cancelamento."/></div></section>
 
       <form action={salvarConfiguracoes} className="card stack-lg">
         <div><h2>Identidade e contato</h2><p className="muted small">O nome e o telefone salvos aqui também são usados na área pública do agendamento.</p></div>
