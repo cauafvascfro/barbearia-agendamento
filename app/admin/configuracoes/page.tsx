@@ -23,7 +23,7 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
 
   const periodos = (dia: number) => (horarios || []).filter((h) => h.dia_semana === dia)
   const identidadeOk=Boolean(config.nome_barbearia?.trim())
-  const contatoOk=Boolean(config.telefone?.trim()||config.endereco?.trim())
+  const contatoOk=Boolean(config.telefone?.trim())
   const expedienteOk=Boolean((horarios||[]).length||(aberturasFuturas||0)>0)
   const servicosOk=Boolean(servicosAtivos&&servicosAtivos>0)
   const regrasOk=Boolean(config.intervalo_agendamento>=5&&config.antecedencia_maxima_dias>=1)
@@ -34,7 +34,7 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
       <header><p className="eyebrow">Administração</p><h1 className="page-title">Configurações</h1><p className="muted">Personalize a barbearia sem precisar alterar o código.</p></header>
       {params.sucesso && <div className="notice notice-success">Configurações salvas.</div>}
       {params.erro && <div className="notice notice-error">{mensagemErro(params.erro)}</div>}
-      <section className="card stack"><div className="split"><div><p className="eyebrow">Implantação</p><h2>Checklist da instalação</h2></div><div className="wrap"><span className={`badge ${publicada?'badge-green':'badge-gray'}`}>{publicada?'Agenda online':'Agenda pausada'}</span><span className="badge badge-green">{prontidao}/5 concluídos</span></div></div><div className="setup-checklist"><SetupItem ok={identidadeOk} titulo="Identidade" detalhe="Defina o nome comercial da barbearia."/><SetupItem ok={contatoOk} titulo="Contato" detalhe="Informe telefone ou endereço para referência do cliente."/><SetupItem ok={servicosOk} titulo="Serviços" detalhe="Cadastre ao menos um serviço ativo para liberar o agendamento."/><SetupItem ok={expedienteOk} titulo="Expediente" detalhe="Cadastre um período semanal ou uma abertura especial futura."/><SetupItem ok={regrasOk} titulo="Regras da agenda" detalhe="Revise intervalo, antecedência e prazo para cancelamento."/></div></section>
+      <section className="card stack"><div className="split"><div><p className="eyebrow">Implantação</p><h2>Checklist da instalação</h2></div><div className="wrap"><span className={`badge ${publicada?'badge-green':'badge-gray'}`}>{publicada?'Agenda online':'Agenda pausada'}</span><span className="badge badge-green">{prontidao}/5 concluídos</span></div></div><div className="setup-checklist"><SetupItem ok={identidadeOk} titulo="Identidade" detalhe="Defina o nome comercial da barbearia."/><SetupItem ok={contatoOk} titulo="Contato" detalhe="Informe um telefone para contato com os clientes."/><SetupItem ok={servicosOk} titulo="Serviços" detalhe="Cadastre ao menos um serviço ativo para liberar o agendamento."/><SetupItem ok={expedienteOk} titulo="Expediente" detalhe="Cadastre um período semanal ou uma abertura especial futura."/><SetupItem ok={regrasOk} titulo="Regras da agenda" detalhe="Revise intervalo, antecedência e prazo para cancelamento."/></div></section>
       <section className="card-soft split"><div><strong>Antes de divulgar o link</strong><p className="muted small">Conclua o checklist e faça um agendamento de teste. Depois, confirme se o horário apareceu corretamente na Agenda administrativa.</p></div><a className="btn" href="/agendar" target="_blank" rel="noreferrer">Testar página pública ↗</a></section>
 
       <form action={salvarConfiguracoes} className="card stack-lg">
@@ -42,7 +42,7 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
         <div className="card-soft split"><div><strong>Agenda pública</strong><p className="muted small">Permite pausar novos agendamentos sem apagar serviços ou horários.</p></div><label className="wrap"><input type="checkbox" name="agenda_publica_ativa" defaultChecked={config.agenda_publica_ativa !== false} /> Aceitar agendamentos online</label></div>
         <div className="grid-2">
           <div className="field"><label>Nome da barbearia</label><input className="input" name="nome_barbearia" required defaultValue={config.nome_barbearia} /></div>
-          <div className="field"><label>Telefone</label><input className="input" name="telefone" defaultValue={config.telefone || ''} /></div>
+          <div className="field"><label>Telefone</label><input className="input" name="telefone" inputMode="tel" autoComplete="tel" required placeholder="(75) 99999-9999" defaultValue={config.telefone || ''} /></div>
           <input type="hidden" name="whatsapp" value={config.whatsapp || ''} />
           <div className="field"><label>Endereço</label><input className="input" name="endereco" defaultValue={config.endereco || ''} /></div>
           <div className="field"><label>Intervalo entre inícios (min)</label><input className="input" type="number" min="5" name="intervalo_agendamento" defaultValue={config.intervalo_agendamento} /></div>
