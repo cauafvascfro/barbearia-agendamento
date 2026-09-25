@@ -10,12 +10,17 @@ export default async function ServicosPage({ searchParams }: Props) {
   const params = await searchParams
   const { supabase } = await requireAdmin()
   const { data: servicos } = await supabase.from('servicos').select('*').order('nome')
+  const ativos=(servicos||[]).filter((s)=>s.ativo)
+  const inativos=(servicos||[]).filter((s)=>!s.ativo)
+  const ticketCatalogo=ativos.length?ativos.reduce((n,s)=>n+Number(s.preco),0)/ativos.length:0
+  const duracaoMedia=ativos.length?Math.round(ativos.reduce((n,s)=>n+Number(s.duracao_minutos),0)/ativos.length):0
 
   return (
     <div className="stack-lg">
       <header><p className="eyebrow">Administração</p><h1 className="page-title">Serviços</h1><p className="muted">Preços e durações usados na agenda.</p></header>
       {params.sucesso && <div className="notice notice-success">Operação realizada com sucesso.</div>}
       {params.erro && <div className="notice notice-error">Não foi possível realizar a operação.</div>}
+      <section className="grid-4"><div className="card stat"><span className="muted small">Serviços ativos</span><strong>{ativos.length}</strong></div><div className="card stat"><span className="muted small">Serviços inativos</span><strong>{inativos.length}</strong></div><div className="card stat"><span className="muted small">Preço médio</span><strong>{formatarMoeda(ticketCatalogo)}</strong></div><div className="card stat"><span className="muted small">Duração média</span><strong>{duracaoMedia} min</strong></div></section>
       <div className="admin-grid">
         <section className="card stack">
           <h2>Novo serviço</h2>
@@ -28,6 +33,7 @@ export default async function ServicosPage({ searchParams }: Props) {
           </form>
         </section>
         <section className="stack">
+          {!(servicos||[]).length&&<div className="card empty-state"><strong>Nenhum serviço cadastrado</strong><p className="muted">Cadastre o primeiro serviço para começar a disponibilizar horários aos clientes.</p></div>}
           {(servicos || []).map((servico) => (
             <article key={servico.id} className="card split">
               <div>
@@ -37,7 +43,7 @@ export default async function ServicosPage({ searchParams }: Props) {
               </div>
               <div className="wrap">
                 <Link className="btn" href={`/admin/servicos/${servico.id}/editar`}>Editar</Link>
-                <form action={alterarStatusServico}><input type="hidden" name="id" value={servico.id} /><input type="hidden" name="ativo" value={String(servico.ativo)} /><button className="btn">{servico.ativo ? 'Desativar' : 'Ativar'}</button></form>
+                <form action={alterarStatusServico}><input type="hidden" name="id" value={servico.id} /><input type="hidden" name="ativo" value={String(servico.ativo)} /><button className="btn">{servico.ativo ? 'Pausar serviço' : 'Disponibilizar'}</button></form>
               </div>
             </article>
           ))}
