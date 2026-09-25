@@ -125,6 +125,8 @@ Consulte:
 
 - `docs/ENVIRONMENTS.md`
 - `docs/PRODUCTION_CHECKLIST.md`
+- `docs/NEW_INSTALLATION.md`
+- `docs/BACKUP_RECOVERY.md`
 
 ## Estrutura principal
 
