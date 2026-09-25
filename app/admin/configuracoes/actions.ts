@@ -25,7 +25,7 @@ export async function salvarConfiguracoes(formData: FormData) {
   const lembreteHoras = Number(formData.get('lembrete_horas_antes'))
   const agendaPublicaAtiva = formData.get('agenda_publica_ativa') === 'on'
 
-  if (!nome || nome.length > 120 || (telefone && (telefoneDigitos.length < 10 || telefoneDigitos.length > 13)) || endereco.length > 240 || !Number.isInteger(intervalo) || intervalo < 5 || intervalo > 240 || !Number.isInteger(antecedenciaMinima) || antecedenciaMinima < 0 || !Number.isInteger(antecedenciaMaxima) || antecedenciaMaxima < 1 || antecedenciaMaxima > 365 || !Number.isInteger(cancelamento) || cancelamento < 0 || !Number.isInteger(lembreteHoras) || lembreteHoras < 1 || lembreteHoras > 168) {
+  if (!nome || nome.length > 120 || (!telefone || telefoneDigitos.length < 10 || telefoneDigitos.length > 13) || endereco.length > 240 || !Number.isInteger(intervalo) || intervalo < 5 || intervalo > 240 || !Number.isInteger(antecedenciaMinima) || antecedenciaMinima < 0 || !Number.isInteger(antecedenciaMaxima) || antecedenciaMaxima < 1 || antecedenciaMaxima > 365 || !Number.isInteger(cancelamento) || cancelamento < 0 || !Number.isInteger(lembreteHoras) || lembreteHoras < 1 || lembreteHoras > 168) {
     redirect('/admin/configuracoes?erro=dados')
   }
 
