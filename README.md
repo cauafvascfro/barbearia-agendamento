@@ -6,17 +6,18 @@ Sistema web de agendamento para uma barbearia de um único profissional, constru
 
 ### Cliente
 - Escolha de serviço, data e horário disponível
-- Cadastro por nome + WhatsApp, sem conta
+- Cadastro por nome + telefone, sem conta
 - Confirmação com link seguro por token
 - Cancelamento e remarcação dentro da política configurada
-- Estrutura opcional para confirmação e lembrete via WhatsApp Cloud API
 
 ### Proprietário
 - Login protegido por Supabase Auth
 - Dashboard com agenda e faturamento realizado
 - Agenda diária
 - Agendamento manual
-- Bloqueio de horários
+- Bloqueio de horários e de dias inteiros
+- Aberturas especiais fora do expediente semanal
+- Remarcação administrativa
 - Concluir, cancelar ou marcar falta
 - Cadastro/edição/desativação de serviços
 - Configuração de expediente e regras
@@ -59,14 +60,6 @@ SUPABASE_SECRET_KEY
 RATE_LIMIT_SALT
 CRON_SECRET
 APP_URL
-```
-
-WhatsApp é opcional:
-
-```text
-WHATSAPP_ACCESS_TOKEN
-WHATSAPP_PHONE_NUMBER_ID
-WHATSAPP_GRAPH_API_VERSION
 ```
 
 Nunca use `NEXT_PUBLIC_` em chaves privadas.
@@ -155,3 +148,16 @@ O faturamento mostrado no dashboard considera apenas agendamentos com status `CO
 
 
 <!-- Vercel deployment sync: 2026-09-24 -->
+
+## Implantação comercial
+
+Antes de divulgar uma nova instalação:
+
+1. Aplique todas as migrations e configure as variáveis de produção.
+2. Crie somente o usuário administrador autorizado e mantenha cadastro público de usuários desabilitado.
+3. Em **Configurações**, conclua identidade, contato, serviços, expediente e regras da agenda.
+4. Faça um agendamento real de homologação pela página pública e confirme sua chegada na Agenda administrativa.
+5. Teste conclusão, cancelamento, remarcação, bloqueio e relatório antes de publicar o link aos clientes.
+6. Use **Agenda pública** para pausar novas reservas online sem impedir a operação manual do proprietário.
+
+A arquitetura atual é de **uma barbearia por instalação/banco de dados**. Multiempresa/multitenancy não deve ser presumido sem uma evolução específica de isolamento de dados, autenticação e cobrança.
