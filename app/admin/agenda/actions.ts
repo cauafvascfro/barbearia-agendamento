@@ -9,6 +9,12 @@ import { registrarAuditoria } from '@/lib/auditoria'
 
 const STATUS_VALIDOS = ['CONFIRMADO', 'CONCLUIDO', 'CANCELADO', 'NAO_COMPARECEU'] as const
 
+function inicioFim(data:string,horaInicio:string,horaFim:string,timezone:string){
+  const inicio=DateTime.fromISO(`${data}T${horaInicio}`,{zone:timezone})
+  const fim=DateTime.fromISO(`${data}T${horaFim}`,{zone:timezone})
+  return {inicio,fim}
+}
+
 export async function alterarStatusAgendamento(formData: FormData) {
   const { supabase, claims } = await requireAdmin()
   const id = String(formData.get('id') || '')
@@ -166,4 +172,22 @@ export async function remarcarAgendamentoAdmin(formData: FormData) {
   await registrarAuditoria({supabase,atorId:String(claims.sub),acao:'AGENDAMENTO_REMARCADO_ADMIN',entidade:'AGENDAMENTO',entidadeId:id})
   revalidatePath('/admin/agenda'); revalidatePath('/admin')
   redirect(`/admin/agenda?data=${novaData}&sucesso=remarcado`)
+}
+
+export async function bloquearDiaInteiro(formData: FormData) {
+  const {supabase,claims}=await requireAdmin()
+  const data=String(formData.get('data')||'')
+  const motivo=String(formData.get('motivo')||'Dia indisponível').trim()
+  const {data:config}=await supabase.from('configuracoes').select('timezone').limit(1).single()
+  const timezone=config?.timezone||'America/Bahia'
+  const inicio=DateTime.fromISO(data,{zone:timezone}).startOf('day')
+  const fim=inicio.plus({days:1})
+  if(!data||!inicio.isValid) redirect(`/admin/agenda?data=${data}&erro=bloqueio`)
+  const {data:conflitos}=await supabase.from('agendamentos').select('id').eq('status','CONFIRMADO').lt('inicio',fim.toUTC().toISO()).gt('fim',inicio.toUTC().toISO()).limit(1)
+  if(conflitos?.length) redirect(`/admin/agenda?data=${data}&erro=bloqueio_conflito`)
+  const {data:criado,error}=await supabase.from('bloqueios_agenda').insert({inicio:inicio.toUTC().toISO(),fim:fim.toUTC().toISO(),motivo:motivo||'Dia indisponível'}).select('id').single()
+  if(error) redirect(`/admin/agenda?data=${data}&erro=banco`)
+  await registrarAuditoria({supabase,atorId:String(claims.sub),acao:'DIA_INTEIRO_BLOQUEADO',entidade:'BLOQUEIO',entidadeId:criado.id})
+  revalidatePath('/admin/agenda'); revalidatePath('/agendar')
+  redirect(`/admin/agenda?data=${data}&sucesso=bloqueio`)
 }
