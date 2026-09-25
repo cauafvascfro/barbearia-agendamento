@@ -55,7 +55,9 @@ Use este checklist para cada nova instalação antes de entregar o sistema ao pr
 - [ ] Entregar URL pública e acesso administrativo ao proprietário por canais adequados.
 - [ ] Registrar qual repositório, projeto Supabase e projeto Vercel pertencem à instalação.
 - [ ] Registrar domínio e responsável administrativo.
-- [ ] Definir um procedimento de backup e recuperação antes do uso contínuo.
+- [ ] Executar o primeiro backup lógico e registrar a data.
+- [ ] Validar o procedimento de recuperação em ambiente isolado antes do uso contínuo.
+- [ ] Seguir `docs/BACKUP_RECOVERY.md` para backup, retenção e recuperação.
 - [ ] Guardar segredos somente nos gerenciadores de ambiente; nunca no repositório.
 
 A instalação só deve ser considerada pronta para divulgação depois que os testes de aceite essenciais forem concluídos.
