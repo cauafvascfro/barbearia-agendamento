@@ -22,12 +22,12 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
   const periodos = (dia: number) => (horarios || []).filter((h) => h.dia_semana === dia)
   return (
     <div className="stack-lg">
-      <header><p className="eyebrow">Administração</p><h1 className="page-title">Configurações</h1><p className="muted">Dados da barbearia, regras e expediente.</p></header>
+      <header><p className="eyebrow">Administração</p><h1 className="page-title">Configurações</h1><p className="muted">Personalize a barbearia sem precisar alterar o código.</p></header>
       {params.sucesso && <div className="notice notice-success">Configurações salvas.</div>}
       {params.erro && <div className="notice notice-error">Revise os dados informados.</div>}
 
       <form action={salvarConfiguracoes} className="card stack-lg">
-        <h2>Dados e regras</h2>
+        <div><h2>Identidade e contato</h2><p className="muted small">O nome e o telefone salvos aqui também são usados na área pública do agendamento.</p></div>
         <div className="grid-2">
           <div className="field"><label>Nome da barbearia</label><input className="input" name="nome_barbearia" required defaultValue={config.nome_barbearia} /></div>
           <div className="field"><label>Telefone</label><input className="input" name="telefone" defaultValue={config.telefone || ''} /></div>
