@@ -1,9 +1,9 @@
 -- Use somente em desenvolvimento/teste. Não rode seed em produção.
 insert into public.configuracoes (
-  nome_barbearia, intervalo_agendamento, antecedencia_minima_minutos,
+  nome_barbearia, telefone, intervalo_agendamento, antecedencia_minima_minutos,
   antecedencia_maxima_dias, cancelamento_minimo_horas, timezone
 )
-values ('Barbearia Demo', 30, 30, 30, 2, 'America/Bahia')
+values ('Barbearia Demo', '(75) 99999-9999', 30, 30, 30, 2, 'America/Bahia')
 on conflict do nothing;
 
 insert into public.servicos(nome, descricao, preco, duracao_minutos)
