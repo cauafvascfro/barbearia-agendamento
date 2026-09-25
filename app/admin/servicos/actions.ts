@@ -49,6 +49,11 @@ export async function alterarStatusServico(formData: FormData) {
   const ativo = formData.get('ativo') === 'true'
   if (!id) redirect('/admin/servicos?erro=dados')
 
+  if (ativo) {
+    const { count } = await supabase.from('servicos').select('id',{count:'exact',head:true}).eq('ativo',true)
+    if ((count||0) <= 1) redirect('/admin/servicos?erro=ultimo-ativo')
+  }
+
   const { error } = await supabase.from('servicos').update({ ativo: !ativo }).eq('id', id)
   if (error) redirect('/admin/servicos?erro=banco')
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: !ativo ? 'SERVICO_ATIVADO' : 'SERVICO_DESATIVADO', entidade: 'SERVICO', entidadeId: id })
