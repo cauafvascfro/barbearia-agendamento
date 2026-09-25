@@ -19,7 +19,7 @@ export default async function ServicosPage({ searchParams }: Props) {
     <div className="stack-lg">
       <header><p className="eyebrow">Administração</p><h1 className="page-title">Serviços</h1><p className="muted">Preços e durações usados na agenda.</p></header>
       {params.sucesso && <div className="notice notice-success">Operação realizada com sucesso.</div>}
-      {params.erro && <div className="notice notice-error">Não foi possível realizar a operação.</div>}
+      {params.erro === 'ultimo-ativo' ? <div className="notice notice-error">Mantenha pelo menos um serviço ativo. Para interromper novos agendamentos, pause a agenda pública em Configurações.</div> : params.erro && <div className="notice notice-error">Não foi possível realizar a operação.</div>}
       <section className="grid-4"><div className="card stat"><span className="muted small">Serviços ativos</span><strong>{ativos.length}</strong></div><div className="card stat"><span className="muted small">Serviços inativos</span><strong>{inativos.length}</strong></div><div className="card stat"><span className="muted small">Preço médio</span><strong>{formatarMoeda(ticketCatalogo)}</strong></div><div className="card stat"><span className="muted small">Duração média</span><strong>{duracaoMedia} min</strong></div></section>
       <div className="admin-grid">
         <section className="card stack">
