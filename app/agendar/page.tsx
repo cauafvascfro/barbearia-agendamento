@@ -13,6 +13,7 @@ export default async function AgendarPage() {
   ])
   if (!config) return <main className="public-shell"><div className="container"><div className="notice notice-error">Sistema ainda não configurado.</div></div></main>
   const pronta=Boolean(config.nome_barbearia?.trim()&&(servicos||[]).length&&(horariosAtivos||0)>0)
+  if(config.agenda_publica_ativa===false) return <main className="public-shell"><div className="container booking-container"><section className="card empty-state"><strong>Agendamento online temporariamente pausado</strong><p className="muted">A barbearia não está recebendo novos agendamentos online neste momento.</p></section></div></main>
   if(!pronta) return <main className="public-shell"><div className="container booking-container"><section className="card empty-state"><strong>Agendamento online em preparação</strong><p className="muted">A barbearia ainda está finalizando a configuração da agenda. Tente novamente mais tarde.</p></section></div></main>
   const timezone = config.timezone || 'America/Bahia'
   const hoje = DateTime.now().setZone(timezone)
