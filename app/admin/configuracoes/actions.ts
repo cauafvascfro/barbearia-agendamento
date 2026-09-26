@@ -15,14 +15,14 @@ export async function salvarConfiguracoes(formData: FormData) {
   const nome = String(formData.get('nome_barbearia') || '').trim()
   const telefone = String(formData.get('telefone') || '').trim()
   const telefoneDigitos = telefone.replace(/\D/g, '')
-     const endereco = String(formData.get('endereco') || '').trim()
+  const endereco = String(formData.get('endereco') || '').trim()
   const intervalo = Number(formData.get('intervalo_agendamento'))
   const antecedenciaMinima = Number(formData.get('antecedencia_minima_minutos'))
   const antecedenciaMaxima = Number(formData.get('antecedencia_maxima_dias'))
   const cancelamento = Number(formData.get('cancelamento_minimo_horas'))
-   const agendaPublicaAtiva = formData.get('agenda_publica_ativa') === 'on'
+  const agendaPublicaAtiva = formData.get('agenda_publica_ativa') === 'on'
 
-  if (!nome || nome.length > 120 || (!telefone || telefoneDigitos.length < 10 || telefoneDigitos.length > 13) || endereco.length > 240 || !Number.isInteger(intervalo) || intervalo < 5 || intervalo > 240 || !Number.isInteger(antecedenciaMinima) || antecedenciaMinima < 0 || !Number.isInteger(antecedenciaMaxima) || antecedenciaMaxima < 1 || antecedenciaMaxima > 365 || !Number.isInteger(cancelamento) || cancelamento < 0 ) {
+  if (!nome || nome.length > 120 || (!telefone || telefoneDigitos.length < 10 || telefoneDigitos.length > 13) || endereco.length > 240 || !Number.isInteger(intervalo) || intervalo < 5 || intervalo > 240 || !Number.isInteger(antecedenciaMinima) || antecedenciaMinima < 0 || !Number.isInteger(antecedenciaMaxima) || antecedenciaMaxima < 1 || antecedenciaMaxima > 365 || !Number.isInteger(cancelamento) || cancelamento < 0) {
     redirect('/admin/configuracoes?erro=dados')
   }
 
