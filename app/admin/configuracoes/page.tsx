@@ -28,6 +28,7 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
   const servicosOk=Boolean(servicosAtivos&&servicosAtivos>0)
   const regrasOk=Boolean(config.intervalo_agendamento>=5&&config.antecedencia_maxima_dias>=1)
   const publicada=config.agenda_publica_ativa!==false
+  const podePublicar=identidadeOk&&contatoOk&&servicosOk&&expedienteOk&&regrasOk
   const itensProntidao=[identidadeOk,contatoOk,servicosOk,expedienteOk,regrasOk]
   const prontidao=itensProntidao.filter(Boolean).length
   const percentualProntidao=Math.round((prontidao/itensProntidao.length)*100)
@@ -41,7 +42,7 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
 
       <form action={salvarConfiguracoes} className="card stack-lg">
         <div><h2>Identidade e contato</h2><p className="muted small">O nome e o telefone salvos aqui também são usados na área pública do agendamento.</p></div>
-        <div className="card-soft split"><div><strong>Agenda pública</strong><p className="muted small">Permite pausar novos agendamentos sem apagar serviços ou horários.</p></div><label className="wrap"><input type="checkbox" name="agenda_publica_ativa" defaultChecked={config.agenda_publica_ativa !== false} /> Aceitar agendamentos online</label></div>
+        <div className="card-soft split"><div><strong>Agenda pública</strong><p className="muted small">{podePublicar?'Permite pausar novos agendamentos sem apagar serviços ou horários.':'Conclua o checklist da instalação antes de publicar novos agendamentos.'}</p></div><label className="wrap"><input type="checkbox" name="agenda_publica_ativa" defaultChecked={config.agenda_publica_ativa !== false} disabled={!podePublicar} /> Aceitar agendamentos online</label>{!podePublicar&&<input type="hidden" name="agenda_publica_ativa" value="off" />}</div>
         <div className="grid-2">
           <div className="field"><label>Nome da barbearia</label><input className="input" name="nome_barbearia" required defaultValue={config.nome_barbearia} /></div>
           <div className="field"><label>Telefone</label><input className="input" name="telefone" inputMode="tel" autoComplete="tel" required placeholder="(75) 99999-9999" defaultValue={config.telefone || ''} /></div>
