@@ -4,7 +4,6 @@ import { DateTime } from 'luxon'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth/require-admin'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { registrarAuditoria } from '@/lib/auditoria'
 
 const STATUS_VALIDOS = ['CONFIRMADO', 'CONCLUIDO', 'CANCELADO', 'NAO_COMPARECEU'] as const
@@ -52,19 +51,18 @@ export async function criarAgendamentoManual(formData: FormData) {
   const observacoes = String(formData.get('observacoes') || '').trim()
   if (!servicoId || !data || !hora || (!clienteId && (!nome || !telefone))) redirect(`/admin/agenda?data=${data}&erro=dados`)
 
-  const admin = createAdminClient()
   if (clienteId) {
-    const { data: cliente } = await admin.from('clientes').select('id,nome,telefone').eq('id', clienteId).eq('ativo', true).maybeSingle()
+    const { data: cliente } = await supabase.from('clientes').select('id,nome,telefone').eq('id', clienteId).eq('ativo', true).maybeSingle()
     if (!cliente) redirect(`/admin/agenda?data=${data}&erro=cliente`)
     nome = cliente.nome
     telefone = cliente.telefone
   }
-  const { data: config } = await admin.from('configuracoes').select('timezone').limit(1).single()
+  const { data: config } = await supabase.from('configuracoes').select('timezone').limit(1).single()
   const timezone = config?.timezone || 'America/Bahia'
   const inicio = DateTime.fromISO(`${data}T${hora}`, { zone: timezone })
   if (!inicio.isValid) redirect(`/admin/agenda?data=${data}&erro=horario`)
 
-  const { data: resultado, error } = await admin.rpc('criar_agendamento_admin', {
+  const { data: resultado, error } = await supabase.rpc('criar_agendamento_admin', {
     p_servico_id: servicoId,
     p_inicio: inicio.toISO(),
     p_nome: nome,
@@ -161,7 +159,6 @@ export async function remarcarAgendamentoAdmin(formData: FormData) {
   const novaData=String(formData.get('nova_data')||'')
   const novaHora=String(formData.get('nova_hora')||'')
   if(!id||!novaData||!novaHora) redirect(`/admin/agenda?data=${dataOrigem}&erro=dados`)
-  const admin=createAdminClient()
   const [{data:agendamento},{data:config}]=await Promise.all([
     admin.from('agendamentos').select('status').eq('id',id).single(),
     admin.from('configuracoes').select('timezone').limit(1).single(),
@@ -170,7 +167,7 @@ export async function remarcarAgendamentoAdmin(formData: FormData) {
   const timezone=config?.timezone||'America/Bahia'
   const inicio=DateTime.fromISO(`${novaData}T${novaHora}`,{zone:timezone})
   if(!inicio.isValid) redirect(`/admin/agenda?data=${dataOrigem}&erro=dados`)
-  const {error}=await admin.rpc('remarcar_agendamento_admin',{p_agendamento_id:id,p_novo_inicio:inicio.toISO()})
+  const {error}=await supabase.rpc('remarcar_agendamento_admin',{p_agendamento_id:id,p_novo_inicio:inicio.toISO()})
   if(error){const msg=error.message; const codigo=msg.includes('HORARIO_INDISPONIVEL')?'ocupado':msg.includes('HORARIO_BLOQUEADO')?'bloqueado':msg.includes('FORA_DO_EXPEDIENTE')?'expediente':msg.includes('ANTECEDENCIA_MINIMA')?'antecedencia':'banco'; redirect(`/admin/agenda?data=${dataOrigem}&erro=${codigo}`)}
   await registrarAuditoria({supabase,atorId:String(claims.sub),acao:'AGENDAMENTO_REMARCADO_ADMIN',entidade:'AGENDAMENTO',entidadeId:id})
   revalidatePath('/admin/agenda'); revalidatePath('/admin')
