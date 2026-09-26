@@ -64,7 +64,7 @@ export async function criarAgendamentoManual(formData: FormData) {
   const inicio = DateTime.fromISO(`${data}T${hora}`, { zone: timezone })
   if (!inicio.isValid) redirect(`/admin/agenda?data=${data}&erro=horario`)
 
-  const { data: resultado, error } = await admin.rpc('criar_agendamento_publico', {
+  const { data: resultado, error } = await admin.rpc('criar_agendamento_admin', {
     p_servico_id: servicoId,
     p_inicio: inicio.toISO(),
     p_nome: nome,
@@ -74,13 +74,12 @@ export async function criarAgendamentoManual(formData: FormData) {
 
   if (error) {
     const msg = error.message
-    const codigo = msg.includes('HORARIO_INDISPONIVEL') ? 'ocupado' : msg.includes('HORARIO_BLOQUEADO') ? 'bloqueado' : msg.includes('FORA_DO_EXPEDIENTE') ? 'expediente' : msg.includes('ANTECEDENCIA_MINIMA') ? 'antecedencia' : 'banco'
+    const codigo = msg.includes('HORARIO_INDISPONIVEL') ? 'ocupado' : msg.includes('HORARIO_BLOQUEADO') ? 'bloqueado' : msg.includes('FORA_DO_EXPEDIENTE') ? 'expediente' : msg.includes('HORARIO_PASSADO') ? 'horario' : 'banco'
     redirect(`/admin/agenda?data=${data}&erro=${codigo}`)
   }
 
   const agendamento = resultado?.[0]
   if (!agendamento) redirect(`/admin/agenda?data=${data}&erro=banco`)
-  await admin.from('agendamentos').update({ origem: 'MANUAL' }).eq('id', agendamento.agendamento_id)
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'AGENDAMENTO_MANUAL_CRIADO', entidade: 'AGENDAMENTO', entidadeId: agendamento.agendamento_id })
   revalidatePath('/admin/agenda')
   revalidatePath('/admin')
