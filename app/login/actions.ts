@@ -1,12 +1,18 @@
 'use server'
 
 import { redirect } from 'next/navigation'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+import { obterIpCabecalhos, validarLimiteLogin } from '@/lib/security/rate-limit'
 
 export async function login(formData: FormData) {
   const email = String(formData.get('email') || '').trim()
   const senha = String(formData.get('senha') || '')
   if (!email || !senha) redirect('/login?erro=campos')
+
+  const cabecalhos = await headers()
+  const ip = obterIpCabecalhos(cabecalhos)
+  if (!(await validarLimiteLogin(ip, email))) redirect('/login?erro=credenciais')
 
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
