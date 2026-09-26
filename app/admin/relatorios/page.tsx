@@ -18,7 +18,7 @@ export default async function RelatoriosPage({searchParams}:Props){
   const fim=fimValido.isValid?fimValido.endOf('day'):agora.endOf('month')
   const dias=Math.max(1,Math.ceil(fim.diff(inicio,'days').days))
   const fimAnterior=inicio.minus({milliseconds:1})
-  const inicioAnterior=fimAnterior.minus({days:dias}).startOf('day')
+  const inicioAnterior=inicio.minus({days:dias})
   const campos='id,inicio,status,preco,nome_servico,cliente_id'
   const [{data:agendamentos},{data:anteriores}]=await Promise.all([
     supabase.from('agendamentos').select(campos).gte('inicio',inicio.toUTC().toISO()).lte('inicio',fim.toUTC().toISO()).order('inicio'),
