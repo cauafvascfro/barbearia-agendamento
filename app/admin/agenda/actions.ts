@@ -160,8 +160,8 @@ export async function remarcarAgendamentoAdmin(formData: FormData) {
   const novaHora=String(formData.get('nova_hora')||'')
   if(!id||!novaData||!novaHora) redirect(`/admin/agenda?data=${dataOrigem}&erro=dados`)
   const [{data:agendamento},{data:config}]=await Promise.all([
-    admin.from('agendamentos').select('status').eq('id',id).single(),
-    admin.from('configuracoes').select('timezone').limit(1).single(),
+    supabase.from('agendamentos').select('status').eq('id',id).single(),
+    supabase.from('configuracoes').select('timezone').limit(1).single(),
   ])
   if(!agendamento||agendamento.status!=='CONFIRMADO') redirect(`/admin/agenda?data=${dataOrigem}&erro=status`)
   const timezone=config?.timezone||'America/Bahia'
