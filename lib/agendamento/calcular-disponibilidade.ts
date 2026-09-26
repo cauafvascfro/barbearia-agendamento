@@ -84,5 +84,7 @@ export async function calcularDisponibilidade({ data, duracaoMinutos, ignorarAge
     }
   }
 
-  return horarios
+  return Array.from(
+    new Map(horarios.map((horario) => [horario.inicio, horario])).values(),
+  ).sort((a, b) => a.inicio.localeCompare(b.inicio))
 }
