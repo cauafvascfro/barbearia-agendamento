@@ -32,7 +32,7 @@ async function consumir(acao: string, chave: string, limite: number, janelaSegun
   })
   if (error) {
     console.error('Rate limit indisponível:', error)
-    return true
+    return false
   }
   return Boolean(data)
 }
