@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { createClient } from '@supabase/supabase-js'
 
 function proximaDataAberta() {
   const data = new Date()
@@ -80,4 +81,38 @@ test('API de agendamento exige JSON', async ({ request }) => {
   })
   expect(resposta.status()).toBe(415)
   expect(resposta.headers()['x-content-type-options']).toBe('nosniff')
+})
+
+
+test('usuário autenticado fora da allowlist não acessa o painel', async ({ page }) => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SECRET_KEY
+  if (!supabaseUrl || !serviceKey) throw new Error('Credenciais do Supabase ausentes no E2E')
+
+  const admin = createClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  const email = 'nao-admin-e2e@example.com'
+  const senha = 'TesteE2E!123456'
+  const { data: criado, error } = await admin.auth.admin.createUser({
+    email,
+    password: senha,
+    email_confirm: true,
+  })
+  if (error) throw error
+
+  try {
+    await page.goto('/login')
+    await page.getByLabel('E-mail').fill(email)
+    await page.getByLabel('Senha').fill(senha)
+    await page.getByRole('button', { name: 'Entrar no painel' }).click()
+
+    await expect(page).toHaveURL(/\/login\?erro=acesso/)
+    await expect(page.getByText('Este usuário não tem permissão para acessar o painel administrativo.')).toBeVisible()
+
+    await page.goto('/admin')
+    await expect(page).toHaveURL(/\/login/)
+  } finally {
+    if (criado.user?.id) await admin.auth.admin.deleteUser(criado.user.id)
+  }
 })
