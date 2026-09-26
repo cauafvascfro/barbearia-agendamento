@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function DashboardPage() {
   const { supabase } = await requireAdmin()
-  const { data: config } = await supabase.from('configuracoes').select('nome_barbearia,telefone,timezone,agenda_publica_ativa').limit(1).single()
+  const { data: config } = await supabase.from('configuracoes').select('nome_barbearia,telefone,timezone,agenda_publica_ativa,intervalo_agendamento,antecedencia_maxima_dias').limit(1).single()
   const timezone=config?.timezone||'America/Bahia'
   const agora=DateTime.now().setZone(timezone)
   const inicioHoje=agora.startOf('day').toUTC(); const fimHoje=agora.endOf('day').toUTC(); const inicioMes=agora.startOf('month').toUTC(); const fimMes=agora.endOf('month').toUTC()
@@ -26,8 +26,9 @@ export default async function DashboardPage() {
   const contatoOk=Boolean(config?.telefone?.trim())
   const servicosOk=(servicosAtivos||0)>0
   const expedienteOk=(horariosAtivos||0)>0||(aberturasFuturas||0)>0
-  const instalacaoPronta=identidadeOk&&contatoOk&&servicosOk&&expedienteOk
-  const pendenciasInstalacao=[!identidadeOk&&'identidade',!contatoOk&&'telefone',!servicosOk&&'serviços',!expedienteOk&&'expediente'].filter(Boolean).join(', ')
+  const regrasOk=Boolean(config&&config.intervalo_agendamento>=5&&config.antecedencia_maxima_dias>=1)
+  const instalacaoPronta=identidadeOk&&contatoOk&&servicosOk&&expedienteOk&&regrasOk
+  const pendenciasInstalacao=[!identidadeOk&&'identidade',!contatoOk&&'telefone',!servicosOk&&'serviços',!expedienteOk&&'expediente',!regrasOk&&'regras da agenda'].filter(Boolean).join(', ')
   const taxaConclusaoMes=(concluidosMes.length+canceladosMes+faltasMes)>0?Math.round((concluidosMes.length/(concluidosMes.length+canceladosMes+faltasMes))*100):0
 
   return <div className="stack-lg">
