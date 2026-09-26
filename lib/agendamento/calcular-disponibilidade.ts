@@ -9,8 +9,8 @@ type Props = {
 
 export async function calcularDisponibilidade({ data, duracaoMinutos, ignorarAgendamentoId }: Props) {
   const supabase = createAdminClient()
-  const { data: configuracao } = await supabase.from('configuracoes').select('*').limit(1).single()
-  if (!configuracao) throw new Error('CONFIGURACAO_NAO_ENCONTRADA')
+  const { data: configuracao, error: erroConfiguracao } = await supabase.from('configuracoes').select('*').limit(1).single()
+  if (erroConfiguracao || !configuracao) throw new Error('CONFIGURACAO_NAO_ENCONTRADA')
 
   const timezone = configuracao.timezone || 'America/Bahia'
   const dia = DateTime.fromISO(data, { zone: timezone })
@@ -20,10 +20,13 @@ export async function calcularDisponibilidade({ data, duracaoMinutos, ignorarAge
   const limite = agora.startOf('day').plus({ days: configuracao.antecedencia_maxima_dias })
   if (dia.startOf('day') < agora.startOf('day') || dia.startOf('day') > limite) return []
 
-  const [{ data: expedienteSemanal }, { data: aberturasExtras }] = await Promise.all([
+  const [expedienteResult, aberturasResult] = await Promise.all([
     supabase.from('horarios_funcionamento').select('hora_inicio,hora_fim').eq('dia_semana', dia.weekday % 7).eq('ativo', true).order('hora_inicio'),
     supabase.from('aberturas_extras').select('hora_inicio,hora_fim').eq('data', data).order('hora_inicio'),
   ])
+  if (expedienteResult.error || aberturasResult.error) throw new Error('EXPEDIENTE_INDISPONIVEL')
+  const expedienteSemanal = expedienteResult.data
+  const aberturasExtras = aberturasResult.data
   const expediente = [...(expedienteSemanal || []), ...(aberturasExtras || [])]
     .sort((a, b) => String(a.hora_inicio).localeCompare(String(b.hora_inicio)))
   if (!expediente.length) return []
@@ -40,10 +43,13 @@ export async function calcularDisponibilidade({ data, duracaoMinutos, ignorarAge
 
   if (ignorarAgendamentoId) consulta = consulta.neq('id', ignorarAgendamentoId)
 
-  const [{ data: agendamentos }, { data: bloqueios }] = await Promise.all([
+  const [agendamentosResult, bloqueiosResult] = await Promise.all([
     consulta,
     supabase.from('bloqueios_agenda').select('inicio,fim').lt('inicio', fimDia.toISO()).gt('fim', inicioDia.toISO()),
   ])
+  if (agendamentosResult.error || bloqueiosResult.error) throw new Error('DISPONIBILIDADE_INDISPONIVEL')
+  const agendamentos = agendamentosResult.data
+  const bloqueios = bloqueiosResult.data
 
   const minimoPermitido = agora.plus({ minutes: configuracao.antecedencia_minima_minutos })
   const intervalo = Math.max(Number(configuracao.intervalo_agendamento) || 30, 1)
