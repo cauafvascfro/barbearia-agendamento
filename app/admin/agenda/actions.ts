@@ -164,14 +164,14 @@ export async function remarcarAgendamentoAdmin(formData: FormData) {
   if(!id||!novaData||!novaHora) redirect(`/admin/agenda?data=${dataOrigem}&erro=dados`)
   const admin=createAdminClient()
   const [{data:agendamento},{data:config}]=await Promise.all([
-    admin.from('agendamentos').select('token_cliente,status').eq('id',id).single(),
+    admin.from('agendamentos').select('status').eq('id',id).single(),
     admin.from('configuracoes').select('timezone').limit(1).single(),
   ])
   if(!agendamento||agendamento.status!=='CONFIRMADO') redirect(`/admin/agenda?data=${dataOrigem}&erro=status`)
   const timezone=config?.timezone||'America/Bahia'
   const inicio=DateTime.fromISO(`${novaData}T${novaHora}`,{zone:timezone})
   if(!inicio.isValid) redirect(`/admin/agenda?data=${dataOrigem}&erro=dados`)
-  const {error}=await admin.rpc('remarcar_agendamento_cliente',{p_token:agendamento.token_cliente,p_novo_inicio:inicio.toISO()})
+  const {error}=await admin.rpc('remarcar_agendamento_admin',{p_agendamento_id:id,p_novo_inicio:inicio.toISO()})
   if(error){const msg=error.message; const codigo=msg.includes('HORARIO_INDISPONIVEL')?'ocupado':msg.includes('HORARIO_BLOQUEADO')?'bloqueado':msg.includes('FORA_DO_EXPEDIENTE')?'expediente':msg.includes('ANTECEDENCIA_MINIMA')?'antecedencia':'banco'; redirect(`/admin/agenda?data=${dataOrigem}&erro=${codigo}`)}
   await registrarAuditoria({supabase,atorId:String(claims.sub),acao:'AGENDAMENTO_REMARCADO_ADMIN',entidade:'AGENDAMENTO',entidadeId:id})
   revalidatePath('/admin/agenda'); revalidatePath('/admin')
