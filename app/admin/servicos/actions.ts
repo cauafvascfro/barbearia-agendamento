@@ -46,17 +46,39 @@ export async function criarServico(formData: FormData) {
 export async function alterarStatusServico(formData: FormData) {
   const { supabase, claims } = await requireAdmin()
   const id = String(formData.get('id') || '')
-  const ativo = formData.get('ativo') === 'true'
   if (!id) redirect('/admin/servicos?erro=dados')
 
-  if (ativo) {
-    const { count } = await supabase.from('servicos').select('id',{count:'exact',head:true}).eq('ativo',true)
+  const { data: servico, error: erroServico } = await supabase
+    .from('servicos')
+    .select('id,ativo')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (erroServico) redirect('/admin/servicos?erro=banco')
+  if (!servico) redirect('/admin/servicos?erro=dados')
+
+  if (servico.ativo) {
+    const { count, error: erroContagem } = await supabase
+      .from('servicos')
+      .select('id',{count:'exact',head:true})
+      .eq('ativo',true)
+    if (erroContagem) redirect('/admin/servicos?erro=banco')
     if ((count||0) <= 1) redirect('/admin/servicos?erro=ultimo-ativo')
   }
 
-  const { error } = await supabase.from('servicos').update({ ativo: !ativo }).eq('id', id)
+  const novoStatus = !servico.ativo
+  const { data: alterado, error } = await supabase
+    .from('servicos')
+    .update({ ativo: novoStatus })
+    .eq('id', id)
+    .eq('ativo', servico.ativo)
+    .select('id')
+    .maybeSingle()
+
   if (error) redirect('/admin/servicos?erro=banco')
-  await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: !ativo ? 'SERVICO_ATIVADO' : 'SERVICO_DESATIVADO', entidade: 'SERVICO', entidadeId: id })
+  if (!alterado) redirect('/admin/servicos?erro=banco')
+
+  await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: novoStatus ? 'SERVICO_ATIVADO' : 'SERVICO_DESATIVADO', entidade: 'SERVICO', entidadeId: id })
   revalidatePath('/admin/servicos')
   revalidatePath('/agendar')
 }
