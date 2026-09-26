@@ -1,6 +1,7 @@
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { salvarConfiguracoes, salvarExpediente } from './actions'
 import { avaliarProntidaoInstalacao } from '@/lib/instalacao'
+import { DateTime } from 'luxon'
 
 export const dynamic = 'force-dynamic'
 type Props = { searchParams: Promise<{ erro?: string; sucesso?: string }> }
@@ -13,14 +14,15 @@ const dias = [
 export default async function ConfiguracoesPage({ searchParams }: Props) {
   const params = await searchParams
   const { supabase } = await requireAdmin()
-  const [{ data: config }, { data: horarios }, { count: servicosAtivos }, { count: aberturasFuturas }] = await Promise.all([
-    supabase.from('configuracoes').select('*').limit(1).single(),
+  const { data: config } = await supabase.from('configuracoes').select('*').limit(1).single()
+  if (!config) return <div className="notice notice-error">Execute as migrations/seed antes de configurar o sistema.</div>
+
+  const hoje = DateTime.now().setZone(config.timezone || 'America/Bahia').toISODate()
+  const [{ data: horarios }, { count: servicosAtivos }, { count: aberturasFuturas }] = await Promise.all([
     supabase.from('horarios_funcionamento').select('*').eq('ativo', true).order('hora_inicio'),
     supabase.from('servicos').select('id',{count:'exact',head:true}).eq('ativo',true),
-    supabase.from('aberturas_extras').select('id',{count:'exact',head:true}).gte('data',new Date().toISOString().slice(0,10)),
+    supabase.from('aberturas_extras').select('id',{count:'exact',head:true}).gte('data',hoje!),
   ])
-
-  if (!config) return <div className="notice notice-error">Execute as migrations/seed antes de configurar o sistema.</div>
 
   const periodos = (dia: number) => (horarios || []).filter((h) => h.dia_semana === dia)
   const statusInstalacao=avaliarProntidaoInstalacao(config,servicosAtivos||0,(horarios||[]).length,aberturasFuturas||0)
@@ -34,7 +36,7 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
       <header><p className="eyebrow">Administração</p><h1 className="page-title">Configurações</h1><p className="muted">Personalize a barbearia sem precisar alterar o código.</p></header>
       {params.sucesso && <div className="notice notice-success">Configurações salvas.</div>}
       {params.erro && <div className="notice notice-error">{mensagemErro(params.erro)}</div>}
-      <section className="card stack"><div className="split"><div><p className="eyebrow">Implantação</p><h2>Checklist da instalação</h2></div><div className="wrap"><span className={`badge ${publicada?'badge-green':'badge-gray'}`}>{publicada?'Agenda online':'Agenda pausada'}</span><span className={`badge ${prontidao===5?'badge-green':'badge-gray'}`}>{prontidao}/5 concluídos · {percentualProntidao}%</span></div></div><div className="setup-checklist"><SetupItem ok={identidadeOk} titulo="Identidade" detalhe="Defina o nome comercial da barbearia."/><SetupItem ok={contatoOk} titulo="Contato" detalhe="Informe um telefone para contato com os clientes."/><SetupItem ok={servicosOk} titulo="Serviços" detalhe="Cadastre ao menos um serviço ativo para liberar o agendamento."/><SetupItem ok={expedienteOk} titulo="Expediente" detalhe="Cadastre um período semanal ou uma abertura especial futura."/><SetupItem ok={regrasOk} titulo="Regras da agenda" detalhe="Revise intervalo, antecedência e prazo para cancelamento."/></div></section>
+      <section className="card stack"><div className="split"><div><p className="eyebrow">Implantação</p><h2>Checklist da instalação</h2></div><div className="wrap"><span className={`badge ${podePublicar && publicada?'badge-green':'badge-gray'}`}>{!podePublicar?'Em preparação':publicada?'Agenda online':'Agenda pausada'}</span><span className={`badge ${prontidao===5?'badge-green':'badge-gray'}`}>{prontidao}/5 concluídos · {percentualProntidao}%</span></div></div><div className="setup-checklist"><SetupItem ok={identidadeOk} titulo="Identidade" detalhe="Defina o nome comercial da barbearia."/><SetupItem ok={contatoOk} titulo="Contato" detalhe="Informe um telefone para contato com os clientes."/><SetupItem ok={servicosOk} titulo="Serviços" detalhe="Cadastre ao menos um serviço ativo para liberar o agendamento."/><SetupItem ok={expedienteOk} titulo="Expediente" detalhe="Cadastre um período semanal ou uma abertura especial futura."/><SetupItem ok={regrasOk} titulo="Regras da agenda" detalhe="Revise intervalo, antecedência e prazo para cancelamento."/></div></section>
       <section className="card-soft split"><div><strong>{prontidao===5?'Configuração essencial concluída':'Antes de divulgar o link'}</strong><p className="muted small">{prontidao===5?'Os dados essenciais estão preenchidos. Faça um agendamento de homologação e confirme o horário na Agenda administrativa.':'Conclua os itens pendentes do checklist antes de iniciar a homologação pública.'}</p></div>{prontidao===5?<a className="btn" href="/agendar" target="_blank" rel="noreferrer">Testar página pública ↗</a>:<span className="badge badge-gray">Homologação aguardando configuração</span>}</section>
 
       <form action={salvarConfiguracoes} className="card stack-lg">
