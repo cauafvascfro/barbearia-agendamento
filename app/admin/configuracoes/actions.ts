@@ -71,12 +71,8 @@ export async function salvarExpediente(formData: FormData) {
     }
   }
 
-  const { error: deleteError } = await supabase.from('horarios_funcionamento').delete().gte('dia_semana', 0)
-  if (deleteError) redirect('/admin/configuracoes?erro=banco')
-  if (horarios.length) {
-    const { error } = await supabase.from('horarios_funcionamento').insert(horarios)
-    if (error) redirect('/admin/configuracoes?erro=banco')
-  }
+  const { error } = await supabase.rpc('salvar_expediente_admin', { p_horarios: horarios })
+  if (error) redirect('/admin/configuracoes?erro=banco')
 
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: 'EXPEDIENTE_EDITADO', entidade: 'HORARIO' })
   revalidatePath('/admin/configuracoes')
