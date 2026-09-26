@@ -10,10 +10,16 @@ function hash(valor: string) {
   return createHash('sha256').update(`${salt}:${valor}`).digest('hex')
 }
 
-export function obterIpCliente(request: NextRequest) {
-  const forwarded = request.headers.get('x-forwarded-for')
+type HeadersLike = { get(name: string): string | null }
+
+export function obterIpCabecalhos(headers: HeadersLike) {
+  const forwarded = headers.get('x-forwarded-for')
   if (forwarded) return forwarded.split(',')[0].trim()
-  return request.headers.get('x-real-ip') || 'desconhecido'
+  return headers.get('x-real-ip') || 'desconhecido'
+}
+
+export function obterIpCliente(request: NextRequest) {
+  return obterIpCabecalhos(request.headers)
 }
 
 export function normalizarTelefone(telefone: string) {
@@ -41,4 +47,11 @@ export async function validarLimiteAgendamento(request: NextRequest, telefone: s
   const ipOk = await consumir('CRIAR_AGENDAMENTO_IP', `ip:${obterIpCliente(request)}`, 10, 10 * 60)
   if (!ipOk) return false
   return consumir('CRIAR_AGENDAMENTO_TELEFONE', `telefone:${normalizarTelefone(telefone)}`, 5, 60 * 60)
+}
+
+
+export async function validarLimiteLogin(ip: string, email: string) {
+  const ipOk = await consumir('LOGIN_IP', `ip:${ip}`, 10, 15 * 60)
+  if (!ipOk) return false
+  return consumir('LOGIN_EMAIL', `email:${email.trim().toLowerCase()}`, 5, 15 * 60)
 }
