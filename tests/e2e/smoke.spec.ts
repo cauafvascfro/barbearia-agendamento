@@ -116,3 +116,46 @@ test('usuário autenticado fora da allowlist não acessa o painel', async ({ pag
     if (criado.user?.id) await admin.auth.admin.deleteUser(criado.user.id)
   }
 })
+
+
+test('banco impede desativar o último serviço ativo', async () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SECRET_KEY
+  if (!supabaseUrl || !serviceKey) throw new Error('Credenciais do Supabase ausentes no E2E')
+
+  const admin = createClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+
+  const { data: servicos, error: erroConsulta } = await admin
+    .from('servicos')
+    .select('id')
+    .eq('ativo', true)
+    .order('id')
+
+  if (erroConsulta) throw erroConsulta
+  if (!servicos?.length) throw new Error('Seed sem serviço ativo para o E2E')
+
+  const ids = servicos.map((servico) => servico.id)
+  const ultimoId = ids[ids.length - 1]
+
+  try {
+    if (ids.length > 1) {
+      const { error } = await admin
+        .from('servicos')
+        .update({ ativo: false })
+        .in('id', ids.slice(0, -1))
+      if (error) throw error
+    }
+
+    const { error } = await admin
+      .from('servicos')
+      .update({ ativo: false })
+      .eq('id', ultimoId)
+
+    expect(error?.message).toContain('ULTIMO_SERVICO_ATIVO')
+  } finally {
+    const { error } = await admin.from('servicos').update({ ativo: true }).in('id', ids)
+    if (error) throw error
+  }
+})
