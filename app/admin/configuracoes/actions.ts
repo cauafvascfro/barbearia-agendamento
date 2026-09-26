@@ -2,8 +2,10 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { DateTime } from 'luxon'
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { registrarAuditoria } from '@/lib/auditoria'
+import { avaliarProntidaoInstalacao } from '@/lib/instalacao'
 
 const dias = [
   { numero: 1, chave: 'segunda' }, { numero: 2, chave: 'terca' }, { numero: 3, chave: 'quarta' },
@@ -26,8 +28,31 @@ export async function salvarConfiguracoes(formData: FormData) {
     redirect('/admin/configuracoes?erro=dados')
   }
 
-  const { data: config } = await supabase.from('configuracoes').select('id').limit(1).single()
+  const { data: config } = await supabase.from('configuracoes').select('id,timezone').limit(1).single()
   if (!config) redirect('/admin/configuracoes?erro=configuracao')
+
+  if (agendaPublicaAtiva) {
+    const hoje = DateTime.now().setZone(config.timezone || 'America/Bahia').toISODate()
+    const [{ count: servicosAtivos }, { count: horariosAtivos }, { count: aberturasFuturas }] = await Promise.all([
+      supabase.from('servicos').select('id', { count: 'exact', head: true }).eq('ativo', true),
+      supabase.from('horarios_funcionamento').select('id', { count: 'exact', head: true }).eq('ativo', true),
+      supabase.from('aberturas_extras').select('id', { count: 'exact', head: true }).gte('data', hoje!),
+    ])
+
+    const prontidao = avaliarProntidaoInstalacao(
+      {
+        nome_barbearia: nome,
+        telefone,
+        intervalo_agendamento: intervalo,
+        antecedencia_maxima_dias: antecedenciaMaxima,
+      },
+      servicosAtivos || 0,
+      horariosAtivos || 0,
+      aberturasFuturas || 0,
+    )
+
+    if (!prontidao.pronta) redirect('/admin/configuracoes?erro=prontidao')
+  }
 
   const { error } = await supabase.from('configuracoes').update({
     nome_barbearia: nome,
