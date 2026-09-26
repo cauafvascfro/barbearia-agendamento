@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { DateTime } from 'luxon'
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { formatarMoeda } from '@/lib/formatters'
+import { avaliarProntidaoInstalacao } from '@/lib/instalacao'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,13 +23,9 @@ export default async function DashboardPage() {
   const concluidos=(hoje||[]).filter((a)=>a.status==='CONCLUIDO'); const confirmados=(hoje||[]).filter((a)=>a.status==='CONFIRMADO')
   const faturamentoHoje=concluidos.reduce((n,a)=>n+Number(a.preco),0); const concluidosMes=(mes||[]).filter((a)=>a.status==='CONCLUIDO'); const faturamentoMes=concluidosMes.reduce((n,a)=>n+Number(a.preco),0); const ticketMedio=concluidosMes.length?faturamentoMes/concluidosMes.length:0; const canceladosMes=(mes||[]).filter((a)=>a.status==='CANCELADO').length; const faltasMes=(mes||[]).filter((a)=>a.status==='NAO_COMPARECEU').length
   const proximo=confirmados.find((a)=>DateTime.fromISO(a.inicio).setZone(timezone)>=agora)
-  const identidadeOk=Boolean(config?.nome_barbearia?.trim())
-  const contatoOk=Boolean(config?.telefone?.trim())
-  const servicosOk=(servicosAtivos||0)>0
-  const expedienteOk=(horariosAtivos||0)>0||(aberturasFuturas||0)>0
-  const regrasOk=Boolean(config&&config.intervalo_agendamento>=5&&config.antecedencia_maxima_dias>=1)
-  const instalacaoPronta=identidadeOk&&contatoOk&&servicosOk&&expedienteOk&&regrasOk
-  const pendenciasInstalacao=[!identidadeOk&&'identidade',!contatoOk&&'telefone',!servicosOk&&'serviços',!expedienteOk&&'expediente',!regrasOk&&'regras da agenda'].filter(Boolean).join(', ')
+  const prontidao=avaliarProntidaoInstalacao(config,servicosAtivos||0,horariosAtivos||0,aberturasFuturas||0)
+  const instalacaoPronta=prontidao.pronta
+  const pendenciasInstalacao=prontidao.pendencias.join(', ')
   const taxaConclusaoMes=(concluidosMes.length+canceladosMes+faltasMes)>0?Math.round((concluidosMes.length/(concluidosMes.length+canceladosMes+faltasMes))*100):0
 
   return <div className="stack-lg">
