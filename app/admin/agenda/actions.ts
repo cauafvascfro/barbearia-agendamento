@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { registrarAuditoria } from '@/lib/auditoria'
 
-const STATUS_VALIDOS = ['CONFIRMADO', 'CONCLUIDO', 'CANCELADO', 'NAO_COMPARECEU'] as const
+const STATUS_FINAIS = ['CONCLUIDO', 'CANCELADO', 'NAO_COMPARECEU'] as const
 
 function inicioFim(data:string,horaInicio:string,horaFim:string,timezone:string){
   const inicio=DateTime.fromISO(`${data}T${horaInicio}`,{zone:timezone})
@@ -19,13 +19,29 @@ export async function alterarStatusAgendamento(formData: FormData) {
   const id = String(formData.get('id') || '')
   const status = String(formData.get('status') || '')
   const data = String(formData.get('data') || '')
-  if (!id || !STATUS_VALIDOS.includes(status as (typeof STATUS_VALIDOS)[number])) redirect(`/admin/agenda?data=${data}&erro=status`)
+  if (!id || !STATUS_FINAIS.includes(status as (typeof STATUS_FINAIS)[number])) redirect(`/admin/agenda?data=${data}&erro=status`)
 
-  const { data: atual } = await supabase.from('agendamentos').select('status,inicio,fim').eq('id', id).single()
-  const { error } = await supabase.from('agendamentos').update({ status }).eq('id', id)
+  const { data: atual, error: erroAtual } = await supabase
+    .from('agendamentos')
+    .select('status,inicio,fim')
+    .eq('id', id)
+    .maybeSingle()
+
+  if (erroAtual) redirect(`/admin/agenda?data=${data}&erro=banco`)
+  if (!atual || atual.status !== 'CONFIRMADO') redirect(`/admin/agenda?data=${data}&erro=status`)
+
+  const { data: alterado, error } = await supabase
+    .from('agendamentos')
+    .update({ status })
+    .eq('id', id)
+    .eq('status', 'CONFIRMADO')
+    .select('id')
+    .maybeSingle()
+
   if (error) redirect(`/admin/agenda?data=${data}&erro=banco`)
+  if (!alterado) redirect(`/admin/agenda?data=${data}&erro=status`)
 
-  if (status === 'CANCELADO' && atual?.status !== 'CANCELADO') {
+  if (status === 'CANCELADO') {
     await supabase.from('agendamento_eventos').insert({
       agendamento_id: id,
       tipo: 'CANCELADO_ADMIN',
