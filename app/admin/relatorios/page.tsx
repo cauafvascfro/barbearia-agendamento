@@ -1,9 +1,10 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { DateTime } from 'luxon'
 import { createClient } from '@/lib/supabase/server'
 import { formatarMoeda } from '@/lib/formatters'
 
-type Props={searchParams:Promise<{inicio?:string;fim?:string}>}
+type Props={searchParams:Promise<{inicio?:string;fim?:string;erro?:string}>}
 type Agendamento={id:string;inicio:string;status:string;preco:number|string|null;nome_servico:string|null;cliente_id:string|null}
 
 export default async function RelatoriosPage({searchParams}:Props){
@@ -14,6 +15,7 @@ export default async function RelatoriosPage({searchParams}:Props){
   const agora=DateTime.now().setZone(timezone)
   const inicioValido=DateTime.fromISO(params.inicio||'',{zone:timezone})
   const fimValido=DateTime.fromISO(params.fim||'',{zone:timezone})
+  if(inicioValido.isValid&&fimValido.isValid&&fimValido<inicioValido)redirect('/admin/relatorios?erro=periodo')
   const inicio=inicioValido.isValid?inicioValido.startOf('day'):agora.startOf('month')
   const fim=fimValido.isValid?fimValido.endOf('day'):agora.endOf('month')
   const dias=Math.max(1,Math.ceil(fim.diff(inicio,'days').days))
@@ -44,6 +46,7 @@ export default async function RelatoriosPage({searchParams}:Props){
 
   return <div className="stack-lg">
     <header className="split"><div><p className="eyebrow">Desempenho</p><h1 className="page-title">Relatórios</h1><p className="muted">Acompanhe os principais números da barbearia.</p></div><form className="report-filter"><div className="field"><label>De</label><input className="input" type="date" name="inicio" defaultValue={inicio.toISODate()||''}/></div><div className="field"><label>Até</label><input className="input" type="date" name="fim" defaultValue={fim.toISODate()||''}/></div><button className="btn btn-primary">Aplicar</button><Link className="btn" href="/admin/relatorios">Mês atual</Link></form></header>
+    {params.erro==='periodo'&&<div className="notice notice-error">A data final deve ser igual ou posterior à data inicial.</div>}
     <section className="stats-grid">
       <Card titulo="Faturamento" valor={formatarMoeda(faturamento)} detalhe={comparar(faturamento,faturamentoAnterior)}/>
       <Card titulo="Atendimentos" valor={String(concluidos.length)} detalhe={comparar(concluidos.length,concluidosAnterior.length)}/>
