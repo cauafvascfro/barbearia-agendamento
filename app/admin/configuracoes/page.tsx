@@ -1,5 +1,6 @@
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { salvarConfiguracoes, salvarExpediente } from './actions'
+import { avaliarProntidaoInstalacao } from '@/lib/instalacao'
 
 export const dynamic = 'force-dynamic'
 type Props = { searchParams: Promise<{ erro?: string; sucesso?: string }> }
@@ -22,16 +23,12 @@ export default async function ConfiguracoesPage({ searchParams }: Props) {
   if (!config) return <div className="notice notice-error">Execute as migrations/seed antes de configurar o sistema.</div>
 
   const periodos = (dia: number) => (horarios || []).filter((h) => h.dia_semana === dia)
-  const identidadeOk=Boolean(config.nome_barbearia?.trim())
-  const contatoOk=Boolean(config.telefone?.trim())
-  const expedienteOk=Boolean((horarios||[]).length||(aberturasFuturas||0)>0)
-  const servicosOk=Boolean(servicosAtivos&&servicosAtivos>0)
-  const regrasOk=Boolean(config.intervalo_agendamento>=5&&config.antecedencia_maxima_dias>=1)
+  const statusInstalacao=avaliarProntidaoInstalacao(config,servicosAtivos||0,(horarios||[]).length,aberturasFuturas||0)
+  const {identidadeOk,contatoOk,servicosOk,expedienteOk,regrasOk}=statusInstalacao
   const publicada=config.agenda_publica_ativa!==false
-  const podePublicar=identidadeOk&&contatoOk&&servicosOk&&expedienteOk&&regrasOk
-  const itensProntidao=[identidadeOk,contatoOk,servicosOk,expedienteOk,regrasOk]
-  const prontidao=itensProntidao.filter(Boolean).length
-  const percentualProntidao=Math.round((prontidao/itensProntidao.length)*100)
+  const podePublicar=statusInstalacao.pronta
+  const prontidao=statusInstalacao.concluidos
+  const percentualProntidao=Math.round((prontidao/statusInstalacao.total)*100)
   return (
     <div className="stack-lg">
       <header><p className="eyebrow">Administração</p><h1 className="page-title">Configurações</h1><p className="muted">Personalize a barbearia sem precisar alterar o código.</p></header>
