@@ -114,7 +114,8 @@ export async function criarBloqueio(formData: FormData) {
   const fim = DateTime.fromISO(`${data}T${horaFim}`, { zone: timezone })
   if (!inicio.isValid || !fim.isValid || fim <= inicio) redirect(`/admin/agenda?data=${data}&erro=bloqueio`)
 
-  const { data: conflito } = await supabase.from('agendamentos').select('id').eq('status', 'CONFIRMADO').lt('inicio', fim.toUTC().toISO()).gt('fim', inicio.toUTC().toISO()).limit(1)
+  const { data: conflito, error: erroConflito } = await supabase.from('agendamentos').select('id').eq('status', 'CONFIRMADO').lt('inicio', fim.toUTC().toISO()).gt('fim', inicio.toUTC().toISO()).limit(1)
+  if (erroConflito) redirect(`/admin/agenda?data=${data}&erro=banco`)
   if (conflito?.length) redirect(`/admin/agenda?data=${data}&erro=bloqueio_conflito`)
 
   const { data: criado, error } = await supabase.from('bloqueios_agenda').insert({ inicio: inicio.toUTC().toISO(), fim: fim.toUTC().toISO(), motivo: motivo || null }).select('id').single()
@@ -214,7 +215,8 @@ export async function bloquearDiaInteiro(formData: FormData) {
   const inicio=DateTime.fromISO(data,{zone:timezone}).startOf('day')
   const fim=inicio.plus({days:1})
   if(!data||!inicio.isValid) redirect(`/admin/agenda?data=${data}&erro=bloqueio`)
-  const {data:conflitos}=await supabase.from('agendamentos').select('id').not('status','in','(CANCELADO,CONCLUIDO,NAO_COMPARECEU)').lt('inicio',fim.toUTC().toISO()).gt('fim',inicio.toUTC().toISO()).limit(1)
+  const {data:conflitos,error:erroConflitos}=await supabase.from('agendamentos').select('id').eq('status','CONFIRMADO').lt('inicio',fim.toUTC().toISO()).gt('fim',inicio.toUTC().toISO()).limit(1)
+  if(erroConflitos) redirect(`/admin/agenda?data=${data}&erro=banco`)
   if(conflitos?.length) redirect(`/admin/agenda?data=${data}&erro=bloqueio_conflito`)
   const {data:criado,error}=await supabase.from('bloqueios_agenda').insert({inicio:inicio.toUTC().toISO(),fim:fim.toUTC().toISO(),motivo:motivo||'Dia indisponível'}).select('id').single()
   if(error){const codigo=error.message.includes('HORARIO_INDISPONIVEL')?'bloqueio_conflito':'banco';redirect(`/admin/agenda?data=${data}&erro=${codigo}`)}
