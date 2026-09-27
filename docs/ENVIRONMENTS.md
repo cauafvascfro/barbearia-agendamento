@@ -26,10 +26,8 @@ Cada instalação comercial deve possuir seu próprio projeto Supabase e sua con
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Sim | Chave pública do Supabase |
 | `SUPABASE_SECRET_KEY` | Não | Operações exclusivas do servidor |
 | `RATE_LIMIT_SALT` | Não | Proteção do rate limit |
-| `CRON_SECRET` | Não | Reserva para rotinas internas protegidas |
-| `APP_URL` | Não | URL pública da instalação |
 
-Nunca exponha `SUPABASE_SECRET_KEY`, `RATE_LIMIT_SALT` ou `CRON_SECRET` no navegador ou com prefixo `NEXT_PUBLIC_`.
+Nunca exponha `SUPABASE_SECRET_KEY` ou `RATE_LIMIT_SALT` no navegador ou com prefixo `NEXT_PUBLIC_`.
 
 Alterações nas variáveis da Vercel devem ser seguidas por um novo deploy, especialmente quando afetarem variáveis públicas utilizadas durante o build.
 
