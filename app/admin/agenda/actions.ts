@@ -114,7 +114,7 @@ export async function criarBloqueio(formData: FormData) {
   const fim = DateTime.fromISO(`${data}T${horaFim}`, { zone: timezone })
   if (!inicio.isValid || !fim.isValid || fim <= inicio) redirect(`/admin/agenda?data=${data}&erro=bloqueio`)
 
-  const { data: conflito } = await supabase.from('agendamentos').select('id').neq('status', 'CANCELADO').lt('inicio', fim.toUTC().toISO()).gt('fim', inicio.toUTC().toISO()).limit(1)
+  const { data: conflito } = await supabase.from('agendamentos').select('id').eq('status', 'CONFIRMADO').lt('inicio', fim.toUTC().toISO()).gt('fim', inicio.toUTC().toISO()).limit(1)
   if (conflito?.length) redirect(`/admin/agenda?data=${data}&erro=bloqueio_conflito`)
 
   const { data: criado, error } = await supabase.from('bloqueios_agenda').insert({ inicio: inicio.toUTC().toISO(), fim: fim.toUTC().toISO(), motivo: motivo || null }).select('id').single()
