@@ -23,7 +23,6 @@ Use este checklist para cada nova instalação antes de entregar o sistema ao pr
 - [ ] Configurar as variáveis de ambiente da instalação.
 - [ ] Confirmar que `/admin` sem sessão redireciona para `/login`.
 - [ ] Configurar o domínio final, quando houver.
-- [ ] Atualizar `APP_URL` para o endereço final e realizar novo deploy.
 
 ## 3. Configuração pelo painel
 
