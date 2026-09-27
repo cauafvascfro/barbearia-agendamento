@@ -117,6 +117,53 @@ test('usuário autenticado fora da allowlist não acessa o painel', async ({ pag
   }
 })
 
+test('proprietário cria agendamento manual pela agenda', async ({ page }) => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SECRET_KEY
+  if (!supabaseUrl || !serviceKey) throw new Error('Credenciais do Supabase ausentes no E2E')
+
+  const admin = createClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  const email = `admin-manual-${Date.now()}@example.com`
+  const senha = 'TesteE2E!123456'
+  const telefone = '5575988888888'
+  const { data: criado, error: erroUsuario } = await admin.auth.admin.createUser({
+    email, password: senha, email_confirm: true,
+  })
+  if (erroUsuario || !criado.user) throw erroUsuario || new Error('Usuário de teste não criado')
+
+  try {
+    const { error: erroAcesso } = await admin.from('admin_usuarios').insert({ user_id: criado.user.id })
+    if (erroAcesso) throw erroAcesso
+
+    await page.goto('/login')
+    await page.getByLabel('E-mail').fill(email)
+    await page.getByLabel('Senha').fill(senha)
+    await page.getByRole('button', { name: 'Entrar no painel' }).click()
+    await expect(page).toHaveURL(/\/admin/)
+
+    await page.goto(`/admin/agenda?data=${proximaDataAberta()}`)
+    const formulario = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Novo agendamento' }) })
+    await formulario.locator('input[name="nome"]').fill('Cliente Manual E2E')
+    await formulario.locator('input[name="telefone"]').fill('(75) 98888-8888')
+    await formulario.locator('select[name="servico_id"]').selectOption({ index: 1 })
+    await expect(formulario.locator('input[name="hora"]').first()).toBeVisible({ timeout: 15_000 })
+    await formulario.locator('input[name="hora"]').first().check()
+    await formulario.getByRole('button', { name: 'Agendar' }).click()
+
+    await expect(page).toHaveURL(/sucesso=agendamento/, { timeout: 15_000 })
+    await expect(page.getByText('Cliente Manual E2E')).toBeVisible()
+  } finally {
+    const { data: cliente } = await admin.from('clientes').select('id').eq('telefone', telefone).maybeSingle()
+    if (cliente) {
+      await admin.from('agendamentos').delete().eq('cliente_id', cliente.id)
+      await admin.from('clientes').delete().eq('id', cliente.id)
+    }
+    await admin.auth.admin.deleteUser(criado.user.id)
+  }
+})
+
 
 test('banco impede desativar o último serviço ativo', async () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
