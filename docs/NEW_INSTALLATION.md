@@ -42,8 +42,6 @@ Não registre senha do administrador ou secret keys nesse documento.
 
 Crie um projeto/deploy destinado à nova instalação e associe as variáveis descritas em `docs/ENVIRONMENTS.md`. Nunca copie uma secret key de outro cliente.
 
-Configure `APP_URL` com o endereço definitivo da instalação e faça novo deploy após a alteração.
-
 ## Fase 4 — configuração sem código
 
 Entre em `/admin/configuracoes` e configure identidade e contato, regras de agendamento e expediente. Depois cadastre os serviços em `/admin/servicos`.
