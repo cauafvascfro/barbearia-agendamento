@@ -148,8 +148,8 @@ test('proprietário cria agendamento manual pela agenda', async ({ page }) => {
     await formulario.locator('input[name="nome"]').fill('Cliente Manual E2E')
     await formulario.locator('input[name="telefone"]').fill('(75) 98888-8888')
     await formulario.locator('select[name="servico_id"]').selectOption({ index: 1 })
-    await expect(formulario.locator('input[name="hora"]').first()).toBeVisible({ timeout: 15_000 })
-    await formulario.locator('input[name="hora"]').first().check()
+    await expect(formulario.locator('.manual-time').first()).toBeVisible({ timeout: 15_000 })
+    await formulario.locator('.manual-time').first().click()
     await formulario.getByRole('button', { name: 'Agendar' }).click()
 
     await expect(page).toHaveURL(/sucesso=agendamento/, { timeout: 15_000 })
