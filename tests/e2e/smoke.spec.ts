@@ -117,7 +117,7 @@ test('usuário autenticado fora da allowlist não acessa o painel', async ({ pag
   }
 })
 
-test('proprietário cria agendamento manual pela agenda', async ({ page }) => {
+test('proprietário cria e remarca agendamento pela agenda', async ({ page }) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SECRET_KEY
   if (!supabaseUrl || !serviceKey) throw new Error('Credenciais do Supabase ausentes no E2E')
@@ -143,7 +143,8 @@ test('proprietário cria agendamento manual pela agenda', async ({ page }) => {
     await page.getByRole('button', { name: 'Entrar no painel' }).click()
     await expect(page).toHaveURL(/\/admin/)
 
-    await page.goto(`/admin/agenda?data=${proximaDataAberta()}`)
+    const dataAgendamento = proximaDataAberta()
+    await page.goto(`/admin/agenda?data=${dataAgendamento}`)
     const formulario = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Novo agendamento' }) })
     await formulario.locator('input[name="nome"]').fill('Cliente Manual E2E')
     await formulario.locator('input[name="telefone"]').fill('(75) 98888-8888')
@@ -154,6 +155,15 @@ test('proprietário cria agendamento manual pela agenda', async ({ page }) => {
 
     await expect(page).toHaveURL(/sucesso=agendamento/, { timeout: 15_000 })
     await expect(page.getByText('Cliente Manual E2E')).toBeVisible()
+
+    const atendimento = page.locator('article.appointment').filter({ hasText: 'Cliente Manual E2E' })
+    await atendimento.locator('summary').filter({ hasText: 'Remarcar' }).click()
+    await atendimento.locator('input[name="nova_data"]').fill(dataAgendamento)
+    await atendimento.locator('input[name="nova_hora"]').fill('11:00')
+    await atendimento.getByRole('button', { name: 'Confirmar remarcação' }).click()
+
+    await expect(page).toHaveURL(/sucesso=remarcado/, { timeout: 15_000 })
+    await expect(page.locator('article.appointment').filter({ hasText: 'Cliente Manual E2E' }).locator('.appointment-time')).toHaveText('11:00')
   } finally {
     const { data: cliente } = await admin.from('clientes').select('id').eq('telefone', telefone).maybeSingle()
     if (cliente) {
