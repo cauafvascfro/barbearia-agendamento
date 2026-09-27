@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/auth/require-admin'
 import { registrarAuditoria } from '@/lib/auditoria'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const STATUS_FINAIS = ['CONCLUIDO', 'CANCELADO', 'NAO_COMPARECEU'] as const
 
@@ -78,7 +79,7 @@ export async function criarAgendamentoManual(formData: FormData) {
   const inicio = DateTime.fromISO(`${data}T${hora}`, { zone: timezone })
   if (!inicio.isValid) redirect(`/admin/agenda?data=${data}&erro=horario`)
 
-  const { data: resultado, error } = await supabase.rpc('criar_agendamento_admin', {
+  const { data: resultado, error } = await createAdminClient().rpc('criar_agendamento_admin', {
     p_servico_id: servicoId,
     p_inicio: inicio.toISO(),
     p_nome: nome,
