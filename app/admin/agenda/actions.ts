@@ -22,33 +22,13 @@ export async function alterarStatusAgendamento(formData: FormData) {
   const data = String(formData.get('data') || '')
   if (!id || !STATUS_FINAIS.includes(status as (typeof STATUS_FINAIS)[number])) redirect(`/admin/agenda?data=${data}&erro=status`)
 
-  const { data: atual, error: erroAtual } = await supabase
-    .from('agendamentos')
-    .select('status,inicio,fim')
-    .eq('id', id)
-    .maybeSingle()
-
-  if (erroAtual) redirect(`/admin/agenda?data=${data}&erro=banco`)
-  if (!atual || atual.status !== 'CONFIRMADO') redirect(`/admin/agenda?data=${data}&erro=status`)
-
-  const { data: alterado, error } = await supabase
-    .from('agendamentos')
-    .update({ status })
-    .eq('id', id)
-    .eq('status', 'CONFIRMADO')
-    .select('id')
-    .maybeSingle()
-
-  if (error) redirect(`/admin/agenda?data=${data}&erro=banco`)
-  if (!alterado) redirect(`/admin/agenda?data=${data}&erro=status`)
-
-  if (status === 'CANCELADO') {
-    await supabase.from('agendamento_eventos').insert({
-      agendamento_id: id,
-      tipo: 'CANCELADO_ADMIN',
-      inicio_anterior: atual?.inicio || null,
-      fim_anterior: atual?.fim || null,
-    })
+  const { error } = await createAdminClient().rpc('alterar_status_agendamento_admin', {
+    p_agendamento_id: id,
+    p_status: status,
+  })
+  if (error) {
+    const codigo = error.message.includes('STATUS_INVALIDO') ? 'status' : 'banco'
+    redirect(`/admin/agenda?data=${data}&erro=${codigo}`)
   }
 
   await registrarAuditoria({ supabase, atorId: String(claims.sub), acao: `AGENDAMENTO_${status}`, entidade: 'AGENDAMENTO', entidadeId: id })

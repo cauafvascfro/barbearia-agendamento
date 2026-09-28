@@ -117,7 +117,7 @@ test('usuário autenticado fora da allowlist não acessa o painel', async ({ pag
   }
 })
 
-test('proprietário cria e remarca agendamento pela agenda', async ({ page }) => {
+test('proprietário cria, remarca e cancela agendamento com histórico', async ({ page }) => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SECRET_KEY
   if (!supabaseUrl || !serviceKey) throw new Error('Credenciais do Supabase ausentes no E2E')
@@ -164,6 +164,22 @@ test('proprietário cria e remarca agendamento pela agenda', async ({ page }) =>
 
     await expect(page).toHaveURL(/sucesso=remarcado/, { timeout: 15_000 })
     await expect(page.locator('article.appointment').filter({ hasText: 'Cliente Manual E2E' }).locator('.appointment-time')).toHaveText('11:00')
+
+    await page.locator('article.appointment').filter({ hasText: 'Cliente Manual E2E' }).getByRole('button', { name: 'Cancelar' }).click()
+    await expect(page).toHaveURL(/sucesso=status/, { timeout: 15_000 })
+    await expect(page.locator('article.appointment').filter({ hasText: 'Cliente Manual E2E' })).toContainText('Cancelado')
+
+    const { data: cliente, error: erroCliente } = await admin.from('clientes').select('id').eq('telefone', telefone).single()
+    if (erroCliente || !cliente) throw erroCliente || new Error('Cliente de teste não encontrado')
+    const { data: agendamento, error: erroAgendamento } = await admin.from('agendamentos')
+      .select('id,status,inicio,fim').eq('cliente_id', cliente.id).single()
+    if (erroAgendamento || !agendamento) throw erroAgendamento || new Error('Agendamento de teste não encontrado')
+    expect(agendamento.status).toBe('CANCELADO')
+    const { data: eventos, error: erroEventos } = await admin.from('agendamento_eventos')
+      .select('tipo,inicio_anterior,fim_anterior').eq('agendamento_id', agendamento.id).eq('tipo', 'CANCELADO_ADMIN')
+    if (erroEventos) throw erroEventos
+    expect(eventos).toHaveLength(1)
+    expect(eventos?.[0]).toMatchObject({ inicio_anterior: agendamento.inicio, fim_anterior: agendamento.fim })
   } finally {
     const { data: cliente } = await admin.from('clientes').select('id').eq('telefone', telefone).maybeSingle()
     if (cliente) {
